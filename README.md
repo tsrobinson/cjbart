@@ -9,7 +9,7 @@
 Bayesian Additive Regression Trees (BART), specifically focussing on
 inspecting heterogeneous treatment effects.
 
-is in its very early stages of development.
+cjbart is in its very early stages of development.
 
 ## Installation
 
@@ -18,11 +18,11 @@ following code:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("MIDASverse/rMIDAS")
+devtools::install_github("tsrobinson/cjbart")
 ```
 
 ## Getting help
 
-If you come across any difficulties, or have any suggestions for
-improvements, please raise an issue
+If you come across any issues, or have any suggestions for improvements,
+please raise an issue
 [here](https://github.com/tsrobinson/cjbart/issues).
