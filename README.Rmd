@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 **cjbart** is an R package for analysing conjoint experiments using Bayesian Additive Regression Trees (BART), specifically focussing on inspecting heterogeneous treatment effects. 
 
-\code{cjbart} is in its very early stages of development.
+cjbart is in its very early stages of development.
 
 ## Installation
 
@@ -26,9 +26,9 @@ cjbart is can be installed directly from this repositroy, using the following co
 
 ```{r, eval = FALSE}
 # install.packages("devtools")
-devtools::install_github("MIDASverse/rMIDAS")
+devtools::install_github("tsrobinson/cjbart")
 ```
 
 ## Getting help
 
-If you come across any difficulties, or have any suggestions for improvements, please raise an issue [here](https://github.com/tsrobinson/cjbart/issues). 
+If you come across any issues, or have any suggestions for improvements, please raise an issue [here](https://github.com/tsrobinson/cjbart/issues). 
