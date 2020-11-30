@@ -21,9 +21,14 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends:
   R (>= 3.6.0),
-  tidyverse,
+  dplyr,
+  tidyr,
+  ggplot2,
+  stringr,
   BART
 Imports: 
+    magrittr,
+    stats
 Suggests: 
     testthat,
     knitr,

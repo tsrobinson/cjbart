@@ -22,7 +22,7 @@ Tibble summarising the average marginal component effect, the minimum and maximu
 A wrapper for the \code{BART::pbart()} function.
 }
 \details{
-Please note, cjbart currently only works for a binary outcome.
+Please note, \code{cjbart} currently only works for a binary outcome.
 }
 \seealso{
 \code{\link[BART:pbart]{BART::pbart()}}

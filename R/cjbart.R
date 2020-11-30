@@ -1,14 +1,14 @@
-#### Functions ####
-
 #' Generate Conjoint Model Using BART
+#'
 #' @description A wrapper for the \code{BART::pbart()} function.
 #' @param data A data.frame or coercible, containing all attributes, covariates, the outcome and id variables to analyse.
 #' @param Y_var Character string -- the outcome variable
 #' @param id_var Character string -- the variable identifying individual respondents
 #' @param ... Other arguments passed to pbart
 #' @return Tibble summarising the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
-#' @details Please note, cjbart currently only works for a binary outcome.
+#' @details Please note, \code{cjbart} currently only works for a binary outcome.
 #' @seealso [BART::pbart()]
+#' @export
 cjbart <- function(data, Y_var, id_var = NULL, ...) {
 
   if (missing(Y_var)) {
@@ -22,19 +22,19 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
   }
 
   train_X <- data %>%
-    select(-{{id_var}},
-           -{{Y_var}}) %>%
-    mutate_if(is.character, as.factor) %>%
-    as.data.frame(.)
+    dplyr::select(-{{id_var}},-{{Y_var}}) %>%
+    dplyr::mutate_if(is.character, as.factor) %>%
+    as.data.frame(.data)
 
   train_Y <- data[[Y_var]]
 
-  train_model <- pbart(x.train = train_X, y.train = train_Y, ...)
+  train_model <- BART::pbart(x.train = train_X, y.train = train_Y, ...)
 
   return(train_model)
 }
 
 #' Heterogeneous Effects Analysis of Conjoint Results
+#'
 #' @description \code{OMCE} calculates the marginal component effects at both the observation- and individual-level, from a BART-estimated conjoint model.
 #' @param data A data.frame or coercible, containing all attributes, covariates, the outcome and id variables to analyse.
 #' @param model A model object, the result of running \code{cjbart}
@@ -51,12 +51,17 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
 #' \item{imce}{A data.frame containing the individual-level marginal effects}
 #' \item{att_levels}{A vector containing the attribute levels}
 #' @seealso [cjbart()]
+#' @import BART
+#' @importFrom stats predict
+#' @export
 OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
   data <- as.data.frame(data)
 
   # Data frame to store OMCEs
-  results <- data %>% select_if(!(names(.) %in% attribs)) %>% select(-{{Y_var}})
+  results <- data %>%
+    dplyr::select_if(!(names(.data) %in% attribs)) %>%
+    dplyr::select(-{{Y_var}})
 
   # Vector to store attribute names (for future function calls)
   out_levels <- c()
@@ -69,34 +74,36 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
     out_levels <- c(out_levels, as.character(att_levels))
 
-    X_pred0 <- data %>% select(-{{Y_var}},
+    X_pred0 <- data %>%
+      dplyr::select(-{{Y_var}},
                                -{{id_var}}) %>%
-      mutate_if(is.character, as.factor)
+      dplyr::mutate_if(is.character, as.factor)
 
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
                                     levels = levels(data[[attribs[i]]]))
 
     for (att_level in att_levels) {
 
-      X_pred1 <- data %>% select(-{{Y_var}},
+      X_pred1 <- data %>%
+        dplyr::select(-{{Y_var}},
                                  -{{id_var}}) %>%
-        mutate_if(is.character, as.factor)
+        dplyr::mutate_if(is.character, as.factor)
 
       X_pred1[[attribs[i]]] <- factor(att_level,
                                       levels = levels(data[[attribs[i]]]))
 
       # Get predictions
       pred1 <- predict(model,
-                       newdata = bartModelMatrix(X_pred1),
+                       newdata = BART::bartModelMatrix(X_pred1),
                        mc.cores = cores)
 
-      pred1_prob <- pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
+      pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
 
       pred0 <- predict(model,
-                       newdata = bartModelMatrix(X_pred0),
+                       newdata = BART::bartModelMatrix(X_pred0),
                        mc.cores = cores)
 
-      pred0_prob <- pnorm(colMeans(pred0$yhat.test))
+      pred0_prob <- stats::pnorm(colMeans(pred0$yhat.test))
 
       # Get OMCE for single attribute-level comparison
       att_level_OMCE <- pred1_prob - pred0_prob
@@ -111,8 +118,8 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   ## IMCE
 
   covars <- results %>%
-    select(-all_of(out_levels)) %>%
-    distinct(.)
+    dplyr::select(-all_of(out_levels)) %>%
+    dplyr::distinct(.data)
 
   if(nrow(covars) != length(unique(results[[id_var]]))) {
     stop("Covariates vary within id.")
@@ -123,9 +130,9 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   }
 
   results_imce <- results %>%
-    group_by_at(id_var) %>%
-    summarise_at(out_levels, mean) %>%
-    left_join(covars, by = {{id_var}})
+    dplyr::group_by_at(id_var) %>%
+    dplyr::summarise_at(out_levels, mean) %>%
+    dplyr::left_join(covars, by = {{id_var}})
 
   out_obj <- list(omce = results,
                   imce = results_imce,

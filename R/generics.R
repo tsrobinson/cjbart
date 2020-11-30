@@ -5,8 +5,13 @@
 #' @param covar Character string detailing the covariate over which to analyse heterogeneous effects
 #' @param type Character string, either "imce" or "omce", to plot individual- and observation-level effects respectively.
 #' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
+#' @param ... Additional arguments for plotting the marginal component effects (see below).
 #' @return Plot of marginal component effects.
-plot.cjbart <- function(x, covar, type = "imce", plot_levels = NULL) {
+#' @import ggplot2
+#' @import dplyr
+#' @import tidyr
+#' @import stringr
+plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 
   if (type == "imce") {
     plot_data <- x$imce
@@ -17,10 +22,10 @@ plot.cjbart <- function(x, covar, type = "imce", plot_levels = NULL) {
   }
 
   plot_data <- plot_data %>%
-    pivot_longer(cols = x$att_levels, names_to = "att", values_to = "mce")
+    tidyr::pivot_longer(cols = x$att_levels, names_to = "att", values_to = "mce")
 
   if (!is.null(plot_levels)) {
-    plot_data <- filter(att %in% plot_levels,
+    plot_data <- filter(.data$att %in% plot_levels,
                         .data = plot_data)
   }
 
@@ -29,13 +34,13 @@ plot.cjbart <- function(x, covar, type = "imce", plot_levels = NULL) {
   }
 
   plot_data <- group_by(.data = plot_data,
-                        att) %>%
-    arrange(mce, by_group = TRUE) %>%
+                        .data$att) %>%
+    arrange(.data$mce, by_group = TRUE) %>%
     mutate(x_order = 1:n())
 
-  base_plot <- ggplot(plot_data,
+  base_plot <- ggplot2::ggplot(plot_data,
                       aes_string(x = "x_order", y = "mce", color = covar)) +
-    facet_wrap(~att, scales = "free") +
+    facet_wrap(~.data$att, scales = "free") +
     geom_point(alpha = 0.7) +
     ylab(ifelse(type == "imce","IMCE","OMCE")) +
     xlab(ifelse(type == "imce","Individual","Observation")) +
@@ -68,22 +73,23 @@ plot.cjbart <- function(x, covar, type = "imce", plot_levels = NULL) {
 #' Summarizing \code{cjbart} Marginal Component Effect Estimates
 #'
 #' @description \code{summary} method for class "cjbart"
-#' @param x Object of class \code{cjbart}, the result of running [OMCE()]
+#' @param object Object of class \code{cjbart}, the result of running [OMCE()]
+#' @param ... Further arguments (not currently used)
 #' @return Tibble summarising the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
-summary.cjbart <- function(x) {
+summary.cjbart <- function(object, ...) {
 
   # IMCE summary
-  IMCE_only <- x$imce %>% select(all_of(x$att_levels))
+  IMCE_only <- object$imce %>% select(all_of(object$att_levels))
 
   AMCE <- colMeans(IMCE_only)
   mins <- apply(IMCE_only,2,min)
   maxs <- apply(IMCE_only,2,max)
-  sds <- apply(IMCE_only,2,sd)
+  sds <- apply(IMCE_only,2,stats::sd)
 
-  att_names <- x$att_levels %>%
-    ifelse(nchar(.) > 30, paste0(substr(.,1,30),"..."), .)
+  att_names <- object$att_levels %>%
+    ifelse(nchar(.data) > 30, paste0(substr(.data,1,30),"..."), .data)
 
-  summary_tab <- tibble(Level = att_names,
+  summary_tab <- dplyr::tibble(Level = att_names,
                         AMCE = AMCE,
                         `Min.` = mins,
                         `Max.` = maxs,
