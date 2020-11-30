@@ -21,5 +21,5 @@
 Plot of marginal component effects.
 }
 \description{
-Plots either the observation-level marginal component effect (OMCE) or the individual-level marginal component effect (IMCE). By default, all attribute-levels in the model are plotted.
+Plots observation-level or individual-level marginal component effects (OMCE and IMCE respectively). By default, all attribute-levels in the model are plotted.
 }
