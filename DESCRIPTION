@@ -1,0 +1,33 @@
+Package: cjbart
+Title: Heterogeneous Effects Analysis of Conjoint Experiments Using Bayesian Additive Regression Trees
+Version: 0.0.0.9000
+Authors@R: c(
+    person(given = "Thomas",
+           family = "Robinson",
+           role = c("aut", "cre", "cph"),
+           email = "ts.robinson1994@gmail.com",
+           comment = c(ORCID = "0000-0001-7097-1599")),
+    person(given = "Raymond",
+           family = "Duch",
+           role = c("aut","cph"),
+           email = "raymond.duch@nuffield.ox.ac.uk",
+           comment = c(ORCID = "0000-0002-1166-7674"))
+    )
+Description: A tool for analysing conjoint experiments using 'BART', a Bayesian machine learning method. This tool focuses specifically on estimating the heterogeneity within marginal component effects: the observation-level marginal effect (OMCE) and individual-level marginal effect (IMCE).
+License: Apache License (>= 2.0)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Depends:
+  R (>= 3.6.0),
+  tidyverse,
+  BART
+Imports: 
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+URL: https://github.com/tsrobinson/cjbart
+BugReports: https://github.com/tsrobinson/cjbart/issues
