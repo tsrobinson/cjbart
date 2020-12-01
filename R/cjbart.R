@@ -7,6 +7,7 @@
 #' @param ... Other arguments passed to pbart
 #' @return Tibble summarising the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
 #' @details Please note, \code{cjbart} currently only works for a binary outcome.
+#' @importFrom BART pbart
 #' @seealso [BART::pbart()]
 #' @export
 cjbart <- function(data, Y_var, id_var = NULL, ...) {
@@ -51,7 +52,6 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
 #' \item{imce}{A data.frame containing the individual-level marginal effects}
 #' \item{att_levels}{A vector containing the attribute levels}
 #' @seealso [cjbart()]
-#' @import BART
 #' @importFrom stats predict
 #' @export
 OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {

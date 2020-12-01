@@ -1,5 +1,4 @@
 #' Plot Marginal Component Effects of a \code{cjbart} Object
-#'
 #' @description Plots observation-level or individual-level marginal component effects (OMCE and IMCE respectively). By default, all attribute-levels in the model are plotted.
 #' @param x Object of class \code{cjbart}, the result of running [OMCE()]
 #' @param covar Character string detailing the covariate over which to analyse heterogeneous effects
@@ -7,6 +6,7 @@
 #' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
 #' @param ... Additional arguments for plotting the marginal component effects (see below).
 #' @return Plot of marginal component effects.
+#' @method plot cjbart
 #' @export
 plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 
@@ -71,11 +71,11 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 }
 
 #' Summarizing \code{cjbart} Marginal Component Effect Estimates
-#'
 #' @description \code{summary} method for class "cjbart"
 #' @param object Object of class \code{cjbart}, the result of running [OMCE()]
 #' @param ... Further arguments (not currently used)
 #' @return Tibble summarising the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
+#' @method summary cjbart
 #' @export
 summary.cjbart <- function(object, ...) {
 
