@@ -23,14 +23,11 @@ Depends:
     R (>= 3.6.0),
     BART
 Imports: 
-    magrittr,
     stats,
     rlang,
-    tidyselect,
     dplyr,
     tidyr,
-    ggplot2,
-    stringr
+    ggplot2
 Suggests: 
     testthat,
     knitr,

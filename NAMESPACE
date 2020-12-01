@@ -2,9 +2,8 @@
 
 S3method(plot,cjbart)
 S3method(summary,cjbart)
-export("%>%")
 export(OMCE)
 export(cjbart)
 importFrom(BART,pbart)
-importFrom(magrittr,"%>%")
+importFrom(rlang,.data)
 importFrom(stats,predict)

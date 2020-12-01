@@ -22,8 +22,11 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
     }
   }
 
-  train_X <- dplyr::select(-{{id_var}},-{{Y_var}}, .data = data) %>%
-    dplyr::mutate_if(is.character, as.factor)
+  train_vars <- names(data)[!(names(data) %in% c(id_var,Y_var))]
+
+  train_X <- data[, train_vars]
+
+  train_X <- char_to_fact(train_X)
 
   train_Y <- data[[Y_var]]
 
@@ -59,9 +62,11 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   data <- as.data.frame(data)
 
   # Data frame to store OMCEs
-  results <- dplyr::select_if(!(names(data) %in% attribs),
-                              .tbl = data) %>%
-    dplyr::select(-{{Y_var}})
+  results <- data[,!(names(data) %in% c(attribs, Y_var))]
+
+  # Data frame for predicting outcomes
+  train_vars <- names(data)[!(names(data) %in% c(id_var,Y_var))]
+  data_predict <- data[,train_vars]
 
   # Vector to store attribute names (for future function calls)
   out_levels <- c()
@@ -74,38 +79,34 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
     out_levels <- c(out_levels, as.character(att_levels))
 
-    X_pred0 <- data %>%
-      dplyr::select(-{{Y_var}},
-                               -{{id_var}}) %>%
-      dplyr::mutate_if(is.character, as.factor)
+    X_pred0 <- data_predict
+
+    X_pred0 <- char_to_fact(X_pred0)
 
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
                                     levels = levels(data[[attribs[i]]]))
 
     for (att_level in att_levels) {
 
-      X_pred1 <- data %>%
-        dplyr::select(-{{Y_var}},
-                                 -{{id_var}}) %>%
-        dplyr::mutate_if(is.character, as.factor)
+      X_pred1 <- X_pred0
 
       X_pred1[[attribs[i]]] <- factor(att_level,
                                       levels = levels(data[[attribs[i]]]))
 
       # Get predictions
-      invisible(
-        pred1 <- predict(model,
-                         newdata = BART::bartModelMatrix(X_pred1),
-                         mc.cores = cores)
-      )
+
+      pred1 <- quiet(predict(model,
+                             newdata = BART::bartModelMatrix(X_pred1),
+                             mc.cores = cores)
+                     )
 
       pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
 
-      invisible(
-        pred0 <- predict(model,
-                         newdata = BART::bartModelMatrix(X_pred0),
-                         mc.cores = cores)
-      )
+
+      pred0 <- quiet(predict(model,
+                             newdata = BART::bartModelMatrix(X_pred0),
+                             mc.cores = cores)
+                     )
 
       pred0_prob <- stats::pnorm(colMeans(pred0$yhat.test))
 
@@ -121,9 +122,9 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
   ## IMCE
 
-  covars <- dplyr::select(-tidyselect::all_of(out_levels),
-                          .data = results) %>%
-    dplyr::distinct()
+  covars <- results[,!(names(results) %in% out_levels)]
+
+  covars <- covars[!duplicated(covars),]
 
   if(nrow(covars) != length(unique(results[[id_var]]))) {
     stop("Covariates vary within id.")
@@ -133,10 +134,9 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
     stop("Could not find id variable in covariate matrix")
   }
 
-  results_imce <- results %>%
-    dplyr::group_by_at(id_var) %>%
-    dplyr::summarise_at(out_levels, mean) %>%
-    dplyr::left_join(covars, by = {{id_var}})
+  results_imce <- dplyr::group_by_at(.vars = id_var, .tbl = results)
+  results_imce <- dplyr::summarise_at(out_levels, mean, .tbl = results_imce)
+  results_imce <- dplyr::left_join(results_imce, covars, by = {{id_var}})
 
   out_obj <- list(omce = results,
                   imce = results_imce,
@@ -147,8 +147,3 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   return(out_obj)
 
 }
-
-
-
-
-

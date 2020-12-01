@@ -6,6 +6,7 @@
 #' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
 #' @param ... Additional arguments for plotting the marginal component effects (see below).
 #' @return Plot of marginal component effects.
+#' @importFrom rlang .data
 #' @method plot cjbart
 #' @export
 plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
@@ -18,33 +19,36 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
     stop("type not recognised -- please check you have specified either 'imce' or 'omce'")
   }
 
-  plot_data <- plot_data %>%
-    tidyr::pivot_longer(cols = x$att_levels, names_to = "att", values_to = "mce")
+  plot_data <- tidyr::pivot_longer(cols = x$att_levels,
+                                   names_to = "att",
+                                   values_to = "mce",
+                                   data = plot_data)
 
   if (!is.null(plot_levels)) {
-    plot_data <- dplyr::filter(rlang::.data$att %in% plot_levels,
-                               .data = plot_data)
+    plot_data <- plot_data[plot_data$att %in% plot_levels,]
   }
 
   if (nrow(plot_data) == 0) {
     stop("Filtering attribute levels renders data with no observations -- please check plot_levels argument.")
   }
 
-  plot_data <- dplyr::group_by(.data = plot_data,
-                               rlang::.data$att) %>%
-    dplyr::arrange(rlang::.data$mce, by_group = TRUE) %>%
-    dplyr::mutate(x_order = 1:dplyr::n())
+  plot_data <- dplyr::group_by(.data$att, .tbl = plot_data)
+  plot_data <- dplyr::arrange(dplyr::across("mce"),
+                              .by_group = TRUE,
+                              .data = plot_data)
+  plot_data <- dplyr::mutate(x_order = 1:dplyr::n(),
+                             .data = plot_data)
 
   base_plot <- ggplot2::ggplot(plot_data,
                                ggplot2::aes_string(x = "x_order",
                                                    y = "mce",
                                                    color = covar)
                                ) +
-    ggplot2::facet_wrap(~rlang::.data$att, scales = "free") +
+    ggplot2::facet_wrap(~.data$att, scales = "free") +
     ggplot2::geom_point(alpha = 0.7) +
     ggplot2::ylab(ifelse(type == "imce","IMCE","OMCE")) +
     ggplot2::xlab(ifelse(type == "imce","Individual","Observation")) +
-    ggplot2::labs(color = stringr::str_to_sentence(covar)) +
+    ggplot2::labs(color = "") +
     ggplot2::theme(legend.position = "bottom",
                    axis.text.x=ggplot2::element_blank(),
                    axis.ticks.x=ggplot2::element_blank())
@@ -80,26 +84,26 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 summary.cjbart <- function(object, ...) {
 
   # IMCE summary
-  IMCE_only <- object$imce %>% dplyr::select(tidyselect::all_of(object$att_levels))
+  IMCE_only <- subset(object$imce, select = object$att_levels)
 
   AMCE <- colMeans(IMCE_only)
   mins <- apply(IMCE_only,2,min)
   maxs <- apply(IMCE_only,2,max)
   sds <- apply(IMCE_only,2,stats::sd)
 
-  att_names <- object$att_levels %>%
-    ifelse(test = nchar(.) > 30,
-           yes = paste0(substr(.,1,30),"..."),
-           no = .)
+  att_names <-  ifelse(test = nchar(object$att_levels) > 30,
+                       yes = paste0(substr(object$att_levels,1,30),"..."),
+                       no = object$att_levels)
 
-  summary_tab <- dplyr::tibble(Level = att_names,
-                        AMCE = AMCE,
-                        `Min.` = mins,
-                        `Max.` = maxs,
-                        `Std.Dev` = sds,
-                        row.names = NULL)
+  summary_tab <- data.frame(Level = att_names,
+                            AMCE = AMCE,
+                            `Min.` = mins,
+                            `Max.` = maxs,
+                            `Std.Dev` = sds,
+                            row.names = NULL)
 
   message("Summary table of individual marginal component effects (IMCEs)")
   print(summary_tab)
 
 }
+
