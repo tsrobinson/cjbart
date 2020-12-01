@@ -1,0 +1,75 @@
+---
+title: "Heterogeneous effects analysis of conjoint experiments"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cjbart-demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette provides a brief example of how to estimate heterogeneous effects in conjoint experiments, using \code{cjbart}.
+
+Suppose we conducted a conjoint experiment on 500 individuals, where each individual makes 5 discrete choices between two profiles. The resultant dataframe would include 2500 observations. within this conjoint, suppose there are five attributes A-E, each with 3 levels. We also record two covariates of each subject. Let's mock up this data:
+
+```{r data, include=TRUE}
+subjects <- 500
+rounds <- 5
+obs <- subjects*rounds
+
+fake_data <- data.frame(id1 = rep(1:subjects, each=rounds),
+                        Y = sample(c(1,0), obs, replace = TRUE),
+                        A = sample(c("a1","a2","a3"), obs, replace = TRUE),
+                        B = sample(c("b1","b2","b3"), obs, replace = TRUE),
+                        C = sample(c("c1","c2","c3"), obs, replace = TRUE),
+                        D = sample(c("d1","d2","d3"), obs, replace = TRUE),
+                        E = sample(c("e1","e2","e3"), obs, replace = TRUE),
+                        covar1 = rep(runif(subjects, 0 ,100), 
+                                     each = rounds),
+                        covar2 = rep(sample(c(1,0), subjects, replace = TRUE), 
+                                     each = rounds),
+                        stringsAsFactors = TRUE)
+```
+
+## Train a probit BART model on conjoint data
+
+To estimate a conjoint model on this data we will use the `cjbart()` function, which uses Bayesian Additive Regression Trees (BART) to approximate the relationships between the outcome (a binary choice), the randomised attribute-levels, and the included covariates. The result is a `pbart` model, which we will use to estimate heterogeneity in the treatment effects:
+
+```{r train, include=TRUE}
+library(cjbart)
+cj_model <- cjbart(data = fake_data,
+                   Y_var = "Y", 
+                   id_var = "id1")
+
+```
+
+To generate heterogeneity estimates at the observation- and individual-level, we use the `OMCE()` function. We pass in both the original experimental data, and the conjoint model generated in the last step. At this point, we also declare the names of the conjoint attribute variables (`attribs`) and the reference category we want to use for each attribute when calculating the marginal component effects (`ref_levels`). The vector of reference levels must be of the same length as `attribs`, with the level at position `i` corresponding to the `attrib[i]`:
+
+```{r OMCE, include=TRUE}
+het_effects <- cjbart::OMCE(data = fake_data, 
+                            model = cj_model, 
+                            attribs = c("A","B","C","D","E"),
+                            ref_levels = c("a1","b1","c1","d1","e1"),
+                            Y_var = "Y", 
+                            id_var = "id1", 
+                            cores = 1)
+```
+
+
+<!-- # We can see the predictions by running: -->
+<!-- predicted_omces$results -->
+
+<!-- ## Then, recover IMCEs -->
+<!-- predicted_imces <- IMCE(predicted_omces, id = "id1") -->
+
+<!-- # Again, we can see the results by running: -->
+<!-- predicted_imces$results -->
+
+<!-- ## Then plot OMCEs or IMCES: -->
+<!-- plot_omce(predicted_omces, "covar2") -->

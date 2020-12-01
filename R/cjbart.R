@@ -22,16 +22,16 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
     }
   }
 
-  train_X <- data %>%
-    dplyr::select(-{{id_var}},-{{Y_var}}) %>%
-    dplyr::mutate_if(is.character, as.factor) %>%
-    as.data.frame(rlang::.data)
+  train_X <- dplyr::select(-{{id_var}},-{{Y_var}}, .data = data) %>%
+    dplyr::mutate_if(is.character, as.factor)
 
   train_Y <- data[[Y_var]]
 
-  train_model <- BART::pbart(x.train = train_X, y.train = train_Y, ...)
+  train_model <- BART::pbart(x.train = as.data.frame(train_X),
+                             y.train = train_Y, ...)
 
   return(train_model)
+
 }
 
 #' Heterogeneous Effects Analysis of Conjoint Results
@@ -59,8 +59,8 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   data <- as.data.frame(data)
 
   # Data frame to store OMCEs
-  results <- data %>%
-    dplyr::select_if(!(names(rlang::.data) %in% attribs)) %>%
+  results <- dplyr::select_if(!(names(data) %in% attribs),
+                              .tbl = data) %>%
     dplyr::select(-{{Y_var}})
 
   # Vector to store attribute names (for future function calls)
@@ -93,15 +93,19 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
                                       levels = levels(data[[attribs[i]]]))
 
       # Get predictions
-      pred1 <- predict(model,
-                       newdata = BART::bartModelMatrix(X_pred1),
-                       mc.cores = cores)
+      invisible(
+        pred1 <- predict(model,
+                         newdata = BART::bartModelMatrix(X_pred1),
+                         mc.cores = cores)
+      )
 
       pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
 
-      pred0 <- predict(model,
-                       newdata = BART::bartModelMatrix(X_pred0),
-                       mc.cores = cores)
+      invisible(
+        pred0 <- predict(model,
+                         newdata = BART::bartModelMatrix(X_pred0),
+                         mc.cores = cores)
+      )
 
       pred0_prob <- stats::pnorm(colMeans(pred0$yhat.test))
 
@@ -117,9 +121,9 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
   ## IMCE
 
-  covars <- results %>%
-    dplyr::select(-tidyselect::all_of(out_levels)) %>%
-    dplyr::distinct(rlang::.data)
+  covars <- dplyr::select(-tidyselect::all_of(out_levels),
+                          .data = results) %>%
+    dplyr::distinct()
 
   if(nrow(covars) != length(unique(results[[id_var]]))) {
     stop("Covariates vary within id.")
