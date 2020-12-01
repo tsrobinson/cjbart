@@ -88,7 +88,9 @@ summary.cjbart <- function(object, ...) {
   sds <- apply(IMCE_only,2,stats::sd)
 
   att_names <- object$att_levels %>%
-    ifelse(nchar(rlang::.data) > 30, paste0(substr(rlang::.data,1,30),"..."), rlang::.data)
+    ifelse(test = nchar(.) > 30,
+           yes = paste0(substr(.,1,30),"..."),
+           no = .)
 
   summary_tab <- dplyr::tibble(Level = att_names,
                         AMCE = AMCE,
