@@ -24,7 +24,7 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
   train_X <- data %>%
     dplyr::select(-{{id_var}},-{{Y_var}}) %>%
     dplyr::mutate_if(is.character, as.factor) %>%
-    as.data.frame(.data)
+    as.data.frame(rlang::.data)
 
   train_Y <- data[[Y_var]]
 
@@ -60,7 +60,7 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
   # Data frame to store OMCEs
   results <- data %>%
-    dplyr::select_if(!(names(.data) %in% attribs)) %>%
+    dplyr::select_if(!(names(rlang::.data) %in% attribs)) %>%
     dplyr::select(-{{Y_var}})
 
   # Vector to store attribute names (for future function calls)
@@ -118,8 +118,8 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   ## IMCE
 
   covars <- results %>%
-    dplyr::select(-all_of(out_levels)) %>%
-    dplyr::distinct(.data)
+    dplyr::select(-tidyselect::all_of(out_levels)) %>%
+    dplyr::distinct(rlang::.data)
 
   if(nrow(covars) != length(unique(results[[id_var]]))) {
     stop("Covariates vary within id.")

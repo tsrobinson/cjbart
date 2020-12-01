@@ -7,10 +7,6 @@
 #' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
 #' @param ... Additional arguments for plotting the marginal component effects (see below).
 #' @return Plot of marginal component effects.
-#' @import ggplot2
-#' @import dplyr
-#' @import tidyr
-#' @import stringr
 #' @export
 plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 
@@ -26,46 +22,49 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
     tidyr::pivot_longer(cols = x$att_levels, names_to = "att", values_to = "mce")
 
   if (!is.null(plot_levels)) {
-    plot_data <- filter(.data$att %in% plot_levels,
-                        .data = plot_data)
+    plot_data <- dplyr::filter(rlang::.data$att %in% plot_levels,
+                               .data = plot_data)
   }
 
   if (nrow(plot_data) == 0) {
     stop("Filtering attribute levels renders data with no observations -- please check plot_levels argument.")
   }
 
-  plot_data <- group_by(.data = plot_data,
-                        .data$att) %>%
-    arrange(.data$mce, by_group = TRUE) %>%
-    mutate(x_order = 1:n())
+  plot_data <- dplyr::group_by(.data = plot_data,
+                               rlang::.data$att) %>%
+    dplyr::arrange(rlang::.data$mce, by_group = TRUE) %>%
+    dplyr::mutate(x_order = 1:dplyr::n())
 
   base_plot <- ggplot2::ggplot(plot_data,
-                      aes_string(x = "x_order", y = "mce", color = covar)) +
-    facet_wrap(~.data$att, scales = "free") +
-    geom_point(alpha = 0.7) +
-    ylab(ifelse(type == "imce","IMCE","OMCE")) +
-    xlab(ifelse(type == "imce","Individual","Observation")) +
-    labs(color = str_to_sentence(covar)) +
-    theme(legend.position = "bottom",
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
+                               ggplot2::aes_string(x = "x_order",
+                                                   y = "mce",
+                                                   color = covar)
+                               ) +
+    ggplot2::facet_wrap(~rlang::.data$att, scales = "free") +
+    ggplot2::geom_point(alpha = 0.7) +
+    ggplot2::ylab(ifelse(type == "imce","IMCE","OMCE")) +
+    ggplot2::xlab(ifelse(type == "imce","Individual","Observation")) +
+    ggplot2::labs(color = stringr::str_to_sentence(covar)) +
+    ggplot2::theme(legend.position = "bottom",
+                   axis.text.x=ggplot2::element_blank(),
+                   axis.ticks.x=ggplot2::element_blank())
 
   if (typeof(plot_data[[covar]]) == "double") {
 
     final_plot <- base_plot +
-      scale_color_gradient(low = "dodgerblue3", high = "goldenrod1")
+      ggplot2::scale_color_gradient(low = "dodgerblue3", high = "goldenrod1")
 
   } else {
 
     final_plot <- base_plot +
-      scale_colour_manual(values=c("#000000", # Colour-blind friendly pallete
-                                   "#E69F00",
-                                   "#56B4E9",
-                                   "#009E73",
-                                   "#F0E442",
-                                   "#0072B2",
-                                   "#D55E00",
-                                   "#CC79A7"))
+      ggplot2::scale_colour_manual(values=c("#000000", # Colour-blind friendly pallete
+                                            "#E69F00",
+                                            "#56B4E9",
+                                            "#009E73",
+                                            "#F0E442",
+                                            "#0072B2",
+                                            "#D55E00",
+                                            "#CC79A7"))
   }
 
   return(final_plot)
@@ -81,7 +80,7 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 summary.cjbart <- function(object, ...) {
 
   # IMCE summary
-  IMCE_only <- object$imce %>% select(all_of(object$att_levels))
+  IMCE_only <- object$imce %>% dplyr::select(tidyselect::all_of(object$att_levels))
 
   AMCE <- colMeans(IMCE_only)
   mins <- apply(IMCE_only,2,min)
@@ -89,7 +88,7 @@ summary.cjbart <- function(object, ...) {
   sds <- apply(IMCE_only,2,stats::sd)
 
   att_names <- object$att_levels %>%
-    ifelse(nchar(.data) > 30, paste0(substr(.data,1,30),"..."), .data)
+    ifelse(nchar(rlang::.data) > 30, paste0(substr(rlang::.data,1,30),"..."), rlang::.data)
 
   summary_tab <- dplyr::tibble(Level = att_names,
                         AMCE = AMCE,
