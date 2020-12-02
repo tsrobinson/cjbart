@@ -1,4 +1,5 @@
-char_to_fact <- function(data) {
+# Convert character columns to factors with warning
+.char_to_fact <- function(data) {
 
   missing_factors <- sapply(data, is.character)
 
@@ -17,7 +18,8 @@ char_to_fact <- function(data) {
   return(data)
 }
 
-quiet <- function(x) {
+# Suppress console output where verbose option not present
+.quiet <- function(x) {
 
   # Code from Hadley Wickham
   # See: https://r.789695.n4.nabble.com/Suppressing-output-e-g-from-cat-td859876.html

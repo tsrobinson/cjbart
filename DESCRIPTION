@@ -13,7 +13,7 @@ Authors@R: c(
            email = "raymond.duch@nuffield.ox.ac.uk",
            comment = c(ORCID = "0000-0002-1166-7674"))
     )
-Description: A tool for analysing conjoint experiments using 'BART', a Bayesian machine learning method. This tool focuses specifically on estimating the heterogeneity within marginal component effects: the observation-level marginal effect (OMCE) and individual-level marginal effect (IMCE).
+Description: A tool for analysing conjoint experiments using 'BART', a Bayesian machine learning method. This tool focuses specifically on estimating and visualising the heterogeneity within marginal component effects, at both the observation- and individual-level.
 License: Apache License (>= 2.0)
 Encoding: UTF-8
 LazyData: true
@@ -25,7 +25,6 @@ Depends:
 Imports: 
     stats,
     rlang,
-    dplyr,
     tidyr,
     ggplot2
 Suggests: 

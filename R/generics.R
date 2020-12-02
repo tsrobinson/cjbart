@@ -12,9 +12,9 @@
 plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
 
   if (type == "imce") {
-    plot_data <- x$imce
+    data <- x$imce
   } else if (type == "omce") {
-    plot_data <- x$omce
+    data <- x$omce
   } else {
     stop("type not recognised -- please check you have specified either 'imce' or 'omce'")
   }
@@ -22,22 +22,31 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
   plot_data <- tidyr::pivot_longer(cols = x$att_levels,
                                    names_to = "att",
                                    values_to = "mce",
-                                   data = plot_data)
+                                   data = data)
 
   if (!is.null(plot_levels)) {
     plot_data <- plot_data[plot_data$att %in% plot_levels,]
+
+    if (nrow(plot_data) == 0) {
+      stop("Filtering attribute levels renders data with no observations -- please check plot_levels argument.")
+    }
+
   }
 
-  if (nrow(plot_data) == 0) {
-    stop("Filtering attribute levels renders data with no observations -- please check plot_levels argument.")
-  }
+  plot_data <- do.call(
 
-  plot_data <- dplyr::group_by(.data$att, .tbl = plot_data)
-  plot_data <- dplyr::arrange(dplyr::across("mce"),
-                              .by_group = TRUE,
-                              .data = plot_data)
-  plot_data <- dplyr::mutate(x_order = 1:dplyr::n(),
-                             .data = plot_data)
+    rbind,
+
+    by(
+      plot_data,
+      INDICES = plot_data$att,
+      FUN = function(x) {
+        x_ordered <- x[order(x$mce),]
+        x_ordered$x_order <- 1:nrow(x_ordered)
+        return(x_ordered)
+        }
+     )
+  )
 
   base_plot <- ggplot2::ggplot(plot_data,
                                ggplot2::aes_string(x = "x_order",

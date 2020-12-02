@@ -2,9 +2,9 @@
 title: "Heterogeneous effects analysis of conjoint experiments"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{cjbart-demo}
+  %\VignetteIndexEntry{Heterogeneous effects analysis of conjoint experiments}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r, include = FALSE}
@@ -61,15 +61,12 @@ het_effects <- cjbart::OMCE(data = fake_data,
                             cores = 1)
 ```
 
+`OMCE()` returns an object of class "cjbart", which is a list with three objects: `omce` estimates, `imce` estimates, and a vector of attribute levels (used when plotting the results).
 
-<!-- # We can see the predictions by running: -->
-<!-- predicted_omces$results -->
+It is likely that users will want to compare the conjoint estimation strategy to other estimation strategies, such as logistic regression models. We can recover the average marginal component effect (AMCE) for the BART model using the `summary()` command:
 
-<!-- ## Then, recover IMCEs -->
-<!-- predicted_imces <- IMCE(predicted_omces, id = "id1") -->
+````{r summary}
+summary(het_effects)
+```
 
-<!-- # Again, we can see the results by running: -->
-<!-- predicted_imces$results -->
-
-<!-- ## Then plot OMCEs or IMCES: -->
-<!-- plot_omce(predicted_omces, "covar2") -->
+`cjbart` also contains a plotting function to visualise heterogeneity in the data.

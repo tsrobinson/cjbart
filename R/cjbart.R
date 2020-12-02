@@ -26,7 +26,7 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
 
   train_X <- data[, train_vars]
 
-  train_X <- char_to_fact(train_X)
+  train_X <- .char_to_fact(train_X)
 
   train_Y <- data[[Y_var]]
 
@@ -81,7 +81,7 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
     X_pred0 <- data_predict
 
-    X_pred0 <- char_to_fact(X_pred0)
+    X_pred0 <- .char_to_fact(X_pred0)
 
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
                                     levels = levels(data[[attribs[i]]]))
@@ -95,7 +95,7 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
       # Get predictions
 
-      pred1 <- quiet(predict(model,
+      pred1 <- .quiet(predict(model,
                              newdata = BART::bartModelMatrix(X_pred1),
                              mc.cores = cores)
                      )
@@ -103,7 +103,7 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
       pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
 
 
-      pred0 <- quiet(predict(model,
+      pred0 <- .quiet(predict(model,
                              newdata = BART::bartModelMatrix(X_pred0),
                              mc.cores = cores)
                      )
@@ -134,9 +134,21 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
     stop("Could not find id variable in covariate matrix")
   }
 
-  results_imce <- dplyr::group_by_at(.vars = id_var, .tbl = results)
-  results_imce <- dplyr::summarise_at(out_levels, mean, .tbl = results_imce)
-  results_imce <- dplyr::left_join(results_imce, covars, by = {{id_var}})
+  agg_formula <- stats::as.formula(
+    paste0(
+      "cbind(",
+      paste0(out_levels, collapse = ", "),
+      ") ~ ",
+      id_var
+      )
+    )
+
+  results_imce <- stats::aggregate(formula = agg_formula,
+                            data = results,
+                            FUN = mean)
+
+  results_imce <- merge(results_imce, covars,
+                         by = id_var)
 
   out_obj <- list(omce = results,
                   imce = results_imce,
