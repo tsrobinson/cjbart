@@ -84,34 +84,52 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
     X_pred0 <- .char_to_fact(X_pred0)
 
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
-                                    levels = levels(data[[attribs[i]]]))
+                                    levels = levels(X_pred0[[attribs[i]]]))
 
     for (att_level in att_levels) {
 
       X_pred1 <- X_pred0
 
       X_pred1[[attribs[i]]] <- factor(att_level,
-                                      levels = levels(data[[attribs[i]]]))
+                                      levels = levels(X_pred0[[attribs[i]]]))
 
       # Get predictions
 
-      pred1 <- .quiet(predict(model,
-                             newdata = BART::bartModelMatrix(X_pred1),
-                             mc.cores = cores)
-                     )
 
-      pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
+      preds_tc <- lapply(list(X_pred1, X_pred0), function (x) {
 
+        pred_yhat_mean <- .quiet(
 
-      pred0 <- .quiet(predict(model,
-                             newdata = BART::bartModelMatrix(X_pred0),
-                             mc.cores = cores)
-                     )
+          predict(
 
-      pred0_prob <- stats::pnorm(colMeans(pred0$yhat.test))
+            model,
+            newdata = BART::bartModelMatrix(x),
+            mc.cores = cores
+
+            )
+          )$yhat.test
+
+        return(stats::pnorm(colMeans(pred_yhat_mean)))
+        }
+        )
+
+      # pred1 <- .quiet(predict(model,
+      #                        newdata = BART::bartModelMatrix(X_pred1),
+      #                        mc.cores = cores)
+      #                )
+      #
+      # pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
+      #
+      #
+      # pred0 <- .quiet(predict(model,
+      #                        newdata = BART::bartModelMatrix(X_pred0),
+      #                        mc.cores = cores)
+      #                )
+      #
+      # pred0_prob <- stats::pnorm(colMeans(pred0$yhat.test))
 
       # Get OMCE for single attribute-level comparison
-      att_level_OMCE <- pred1_prob - pred0_prob
+      att_level_OMCE <- preds_tc[[1]] - preds_tc[[2]]
 
       # Store results in data.frame
       results[[as.character(att_level)]] <- att_level_OMCE
