@@ -77,8 +77,9 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   rm(test_data)
   gc()
 
-  # Data frame to store OMCEs
+  # Frames to store OMCEs and variances
   results <- data[,!(names(data) %in% c(attribs, Y_var))]
+  var_omce <- data.frame(row.names = 1:nrow(data))
 
   # Data frame for predicting outcomes
   train_vars <- names(data)[!(names(data) %in% c(id_var,Y_var))]
@@ -110,7 +111,7 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
         newdata = BART::bartModelMatrix(X_pred0),
         mc.cores = cores
       )
-    )$prob.test.mean
+    )#$prob.test.mean
 
     for (att_level in att_levels) {
 
@@ -130,16 +131,14 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
             mc.cores = cores
 
             )
-          )$prob.test.mean
+          )#$prob.test.mean
 
       ## Note, prob.test.mean is equivalent to
-      # stats::pnorm(colMeans(pred0$yhat.test))
+      # stats::pnorm(colMeans(pred_0$yhat.test))
 
-      # Get OMCE for single attribute-level comparison
-      att_level_OMCE <- phat_1 - phat_0
-
-      # Store results in data.frame
-      results[[as.character(att_level)]] <- att_level_OMCE
+      # Get OMCE for single attribute-level comparison and store
+      results[[as.character(att_level)]] <- phat_1$prob.test.mean - phat_0$prob.test.mean
+      var_omce[[att_level]] <- apply(phat_1$prob.test - phat_0$prob.test, 2, var)
 
     }
 
@@ -166,8 +165,19 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
                             data = results,
                             FUN = mean)
 
+  results_var <- sapply(colnames(var_omce), function (x) {
+
+    sapply(results_imce[[id_var]], function (y) {
+      .combine_variance(X = results[results$CaseID == y, x],
+                        V = var_omce[results$CaseID == y,x])
+      }
+    )
+    }
+  )
+
   out_obj <- list(omce = results,
                   imce = results_imce,
+                  imce_var = results_var,
                   att_levels = out_levels)
 
   class(out_obj) <- "cjbart"

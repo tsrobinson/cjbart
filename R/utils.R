@@ -29,3 +29,21 @@
   invisible(force(x))
 
 }
+
+# Calculate combined variance
+# See: https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
+.combine_variance <- function(X, V, Dr = 1000) {
+
+  if (length(X) != length(V)) {
+    stop("Incorrect dimensions to combined variance calculation")
+  }
+
+  (Dr*(sum(V) + sum((X-mean(X))^2)))/(length(X)*Dr)
+
+}
+
+.var_to_se <- function(V_mat, N) {
+
+  sqrt(V_mat)/sqrt(N)
+
+}
