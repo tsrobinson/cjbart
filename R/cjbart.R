@@ -30,7 +30,7 @@ cjbart <- function(data, Y_var, id_var = NULL, ...) {
 
   train_Y <- data[[Y_var]]
 
-  train_model <- BART::pbart(x.train = as.data.frame(train_X),
+  train_model <- BART::mc.pbart(x.train = as.data.frame(train_X),
                              y.train = train_Y, ...)
 
   return(train_model)
@@ -61,6 +61,22 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
   data <- as.data.frame(data)
 
+  # Check incoming data
+
+  test_data <- data[,!(names(data) %in% c(attribs,Y_var))]
+  test_data <- test_data[!duplicated(test_data),]
+
+  if(!(id_var %in% names(test_data))) {
+    stop("Could not find id variable in covariate matrix")
+  }
+
+  if(nrow(test_data) != length(unique(test_data[[id_var]]))) {
+    stop("Covariates vary within id: data must not contain covariates that vary across observations of the same subject")
+  }
+
+  rm(test_data)
+  gc()
+
   # Data frame to store OMCEs
   results <- data[,!(names(data) %in% c(attribs, Y_var))]
 
@@ -86,6 +102,16 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
                                     levels = levels(X_pred0[[attribs[i]]]))
 
+    phat_0 <- .quiet(
+
+      predict(
+
+        model,
+        newdata = BART::bartModelMatrix(X_pred0),
+        mc.cores = cores
+      )
+    )$prob.test.mean
+
     for (att_level in att_levels) {
 
       X_pred1 <- X_pred0
@@ -95,41 +121,22 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
       # Get predictions
 
-
-      preds_tc <- lapply(list(X_pred1, X_pred0), function (x) {
-
-        pred_yhat_mean <- .quiet(
+      phat_1 <- .quiet(
 
           predict(
 
             model,
-            newdata = BART::bartModelMatrix(x),
+            newdata = BART::bartModelMatrix(X_pred1),
             mc.cores = cores
 
             )
-          )$yhat.test
+          )$prob.test.mean
 
-        return(stats::pnorm(colMeans(pred_yhat_mean)))
-        }
-        )
-
-      # pred1 <- .quiet(predict(model,
-      #                        newdata = BART::bartModelMatrix(X_pred1),
-      #                        mc.cores = cores)
-      #                )
-      #
-      # pred1_prob <- stats::pnorm(colMeans(pred1$yhat.test)) # Converts probit to predicted probabilities
-      #
-      #
-      # pred0 <- .quiet(predict(model,
-      #                        newdata = BART::bartModelMatrix(X_pred0),
-      #                        mc.cores = cores)
-      #                )
-      #
-      # pred0_prob <- stats::pnorm(colMeans(pred0$yhat.test))
+      ## Note, prob.test.mean is equivalent to
+      # stats::pnorm(colMeans(pred0$yhat.test))
 
       # Get OMCE for single attribute-level comparison
-      att_level_OMCE <- preds_tc[[1]] - preds_tc[[2]]
+      att_level_OMCE <- phat_1 - phat_0
 
       # Store results in data.frame
       results[[as.character(att_level)]] <- att_level_OMCE
@@ -140,22 +147,16 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
 
   ## IMCE
 
+  message("Calculating IMCEs")
+
   covars <- results[,!(names(results) %in% out_levels)]
 
   covars <- covars[!duplicated(covars),]
 
-  if(nrow(covars) != length(unique(results[[id_var]]))) {
-    stop("Covariates vary within id.")
-  }
-
-  if(!(id_var %in% names(covars))) {
-    stop("Could not find id variable in covariate matrix")
-  }
-
   agg_formula <- stats::as.formula(
     paste0(
       "cbind(",
-      paste0(out_levels, collapse = ", "),
+      paste0(paste0("`",out_levels,"`"), collapse = ", "),
       ") ~ ",
       id_var
       )
@@ -164,9 +165,6 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   results_imce <- stats::aggregate(formula = agg_formula,
                             data = results,
                             FUN = mean)
-
-  results_imce <- merge(results_imce, covars,
-                         by = id_var)
 
   out_obj <- list(omce = results,
                   imce = results_imce,
@@ -177,3 +175,4 @@ OMCE <- function(data, model, attribs, ref_levels, Y_var, id_var, cores = 1) {
   return(out_obj)
 
 }
+

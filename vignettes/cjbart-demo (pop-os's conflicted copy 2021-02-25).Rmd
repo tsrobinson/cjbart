@@ -14,7 +14,6 @@ knitr::opts_chunk$set(
 )
 
 set.seed(89)
-library(ggplot2)
 ```
 
 This vignette provides a brief example of how to estimate heterogeneous effects in conjoint experiments, using \code{cjbart}.
@@ -63,7 +62,7 @@ het_effects <- cjbart::OMCE(data = fake_data,
                             ref_levels = c("a1","b1","c1","d1","e1"),
                             Y_var = "Y", 
                             id_var = "id1", 
-                            cores = 4)
+                            cores = 8)
 ```
 
 `OMCE()` returns an object of class "cjbart", which is a list with three objects: `omce` estimates, `imce` estimates, and a vector of attribute levels (used when plotting the results).
@@ -119,28 +118,9 @@ immig_het <- cjbart::OMCE(data = immigration,
                             id_var = "CaseID", 
                             cores = 8)
 
-cjbart_immig <- summary(immig_het)
-colnames(cjbart_immig)[1] <- "level"
-
-cregg_immig <- cregg::cj(immigration, formula = as.formula(paste0("ChosenImmigrant ~ ", paste0(immig_attribs, collapse = " + "))))
-
-comparison <- merge(cregg_immig[,c("feature","level","estimate")], cjbart_immig[,c("level","AMCE")])
-colnames(comparison) <- c("Level","Feature","Parametric","cjbart")
-
-comparison
 
 ```
 
-We can visualise these comparisons too:
 
-```{r immig_fig}
-
-ggplot(comparison, aes(x = Parametric, y = cjbart, color = Feature)) +
-  geom_point() +
-  geom_abline(linetype = "dashed", color = "grey")+
-  theme_minimal() +
-  theme(legend.position = "bottom")
-
-```
 
 
