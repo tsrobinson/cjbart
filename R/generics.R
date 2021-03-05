@@ -2,27 +2,37 @@
 #' @description Plots observation-level or individual-level marginal component effects (OMCE and IMCE respectively). By default, all attribute-levels in the model are plotted.
 #' @param x Object of class \code{cjbart}, the result of running [OMCE()]
 #' @param covar Character string detailing the covariate over which to analyse heterogeneous effects
-#' @param type Character string, either "imce" or "omce", to plot individual- and observation-level effects respectively.
 #' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
+#' @param se Boolean determining whether to show an estimated 95% confidence interval
 #' @param ... Additional arguments for plotting the marginal component effects (see below).
 #' @return Plot of marginal component effects.
 #' @importFrom rlang .data
 #' @method plot cjbart
 #' @export
-plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
+plot.cjbart <- function(x, plot_levels = NULL, se = TRUE, covar = NULL, ...) {
 
-  if (type == "imce") {
-    data <- x$imce
-  } else if (type == "omce") {
-    data <- x$omce
-  } else {
-    stop("type not recognised -- please check you have specified either 'imce' or 'omce'")
-  }
+  data <- x$imce
 
   plot_data <- tidyr::pivot_longer(cols = x$att_levels,
                                    names_to = "att",
-                                   values_to = "mce",
+                                   values_to = "imce",
                                    data = data)
+
+  if (se) {
+
+    ci_lower <- tidyr::pivot_longer(cols = x$att_levels,
+                                    names_to = "att",
+                                    values_to = "imce_lower",
+                                    data = x$imce_lower)
+
+    ci_upper <- tidyr::pivot_longer(cols = x$att_levels,
+                                    names_to = "att",
+                                    values_to = "imce_upper",
+                                    data = x$imce_upper)
+
+    plot_data <- cbind(plot_data, imce_lower = ci_lower$imce_lower, imce_upper =  ci_upper$imce_upper)
+
+  }
 
   if (!is.null(plot_levels)) {
     plot_data <- plot_data[plot_data$att %in% plot_levels,]
@@ -41,7 +51,7 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
       plot_data,
       INDICES = plot_data$att,
       FUN = function(x) {
-        x_ordered <- x[order(x$mce),]
+        x_ordered <- x[order(x$imce),]
         x_ordered$x_order <- 1:nrow(x_ordered)
         return(x_ordered)
         }
@@ -49,38 +59,46 @@ plot.cjbart <- function(x, plot_levels = NULL, type = "imce", covar, ...) {
   )
 
   base_plot <- ggplot2::ggplot(plot_data,
-                               ggplot2::aes_string(x = "x_order",
-                                                   y = "mce",
-                                                   color = covar)
-                               ) +
+                                 ggplot2::aes_string(x = "x_order",
+                                                     y = "imce")) +
+
+    ggplot2::geom_hline(yintercept = 0, size = 0.5, linetype = "dashed") +
+
+    {if (!is.null(covar)) {ggplot2::aes_string(color = covar)}} +
+    {if (se) {ggplot2::geom_ribbon(ggplot2::aes(ymin = imce_lower, ymax = imce_upper), color = NA, fill = "grey60", alpha = 0.7)}} +
+
     ggplot2::facet_wrap(~.data$att, scales = "free") +
-    ggplot2::geom_point(alpha = 0.7) +
-    ggplot2::ylab(ifelse(type == "imce","IMCE","OMCE")) +
-    ggplot2::xlab(ifelse(type == "imce","Individual","Observation")) +
-    ggplot2::labs(color = "") +
+    ggplot2::geom_point(alpha = 0.8) +
+    ggplot2::ylab("IMCE") +
+    ggplot2::xlab("Individual") +
     ggplot2::theme(legend.position = "bottom",
                    axis.text.x=ggplot2::element_blank(),
                    axis.ticks.x=ggplot2::element_blank())
 
-  if (typeof(plot_data[[covar]]) == "double") {
+  if (!is.null(covar)) {
 
-    final_plot <- base_plot +
-      ggplot2::scale_color_gradient(low = "dodgerblue3", high = "goldenrod1")
+    if (typeof(plot_data[[covar]]) == "double") {
 
-  } else {
+      base_plot <- base_plot +
+        ggplot2::scale_color_gradient(low = "dodgerblue3", high = "goldenrod1")
 
-    final_plot <- base_plot +
-      ggplot2::scale_colour_manual(values=c("#000000", # Colour-blind friendly pallete
-                                            "#E69F00",
-                                            "#56B4E9",
-                                            "#009E73",
-                                            "#F0E442",
-                                            "#0072B2",
-                                            "#D55E00",
-                                            "#CC79A7"))
+    } else {
+
+      base_plot <- base_plot +
+        ggplot2::scale_colour_manual(values=c("#000000", # Colour-blind friendly pallete
+                                              "#E69F00",
+                                              "#56B4E9",
+                                              "#009E73",
+                                              "#F0E442",
+                                              "#0072B2",
+                                              "#D55E00",
+                                              "#CC79A7"))
+    }
+
   }
 
-  return(final_plot)
+
+  return(base_plot)
 }
 
 #' Summarizing \code{cjbart} Marginal Component Effect Estimates

@@ -4,14 +4,14 @@
 \alias{plot.cjbart}
 \title{Plot Marginal Component Effects of a \code{cjbart} Object}
 \usage{
-\method{plot}{cjbart}(x, plot_levels = NULL, type = "imce", covar, ...)
+\method{plot}{cjbart}(x, plot_levels = NULL, se = TRUE, covar = NULL, ...)
 }
 \arguments{
 \item{x}{Object of class \code{cjbart}, the result of running \code{\link[=OMCE]{OMCE()}}}
 
 \item{plot_levels}{Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.}
 
-\item{type}{Character string, either "imce" or "omce", to plot individual- and observation-level effects respectively.}
+\item{se}{Boolean determining whether to show an estimated 95\% confidence interval}
 
 \item{covar}{Character string detailing the covariate over which to analyse heterogeneous effects}
 

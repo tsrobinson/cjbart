@@ -4,14 +4,14 @@
 \alias{cjbart}
 \title{Generate Conjoint Model Using BART}
 \usage{
-cjbart(data, Y_var, id_var = NULL, ...)
+cjbart(data, Y, id = NULL, ...)
 }
 \arguments{
 \item{data}{A data.frame or coercible, containing all attributes, covariates, the outcome and id variables to analyse.}
 
-\item{Y_var}{Character string -- the outcome variable}
+\item{Y}{Character string -- the outcome variable}
 
-\item{id_var}{Character string -- the variable identifying individual respondents}
+\item{id}{Character string -- the variable identifying individual respondents}
 
 \item{...}{Other arguments passed to pbart}
 }

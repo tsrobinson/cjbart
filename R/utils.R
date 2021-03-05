@@ -30,20 +30,26 @@
 
 }
 
-# Calculate combined variance
-# See: https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
-.combine_variance <- function(X, V, Dr = 1000) {
 
-  if (length(X) != length(V)) {
-    stop("Incorrect dimensions to combined variance calculation")
-  }
+# Implementation of Rubin's combination rules
+.combine <- function(theta, var_theta) {
 
-  (Dr*(sum(V) + sum((X-mean(X))^2)))/(length(X)*Dr)
+  m <- length(theta)
 
-}
+  Q_bar <- (1/m)*sum(theta)
+  U_bar <- (1/m)*sum(var_theta)
 
-.var_to_se <- function(V_mat, N) {
+  demean <- (theta-Q_bar)^2
 
-  sqrt(V_mat)/sqrt(N)
+  B <- (1/(m-1)) * sum(demean)
+
+  Q_bar_var <- U_bar + (1 + (1/m))*B
+  Q_bar_se <- sqrt(Q_bar_var)
+
+  v_m <- (m-1)*(1+(U_bar/((1+m^-1)*B)))^2
+
+  std_err = Q_bar_se
+
+  return(std_err)
 
 }

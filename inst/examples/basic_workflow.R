@@ -25,16 +25,16 @@ fake_data$Y <- ifelse(fake_data$E == "e2",
                       sample(c(0,1), obs, replace = TRUE))
 
 cj_model <- cjbart(data = fake_data,
-                   Y_var = "Y",
-                   id_var = "id1")
+                   Y = "Y",
+                   id = "id1")
 
-het_effects <- cjbart::OMCE(data = fake_data,
-                            model = cj_model,
-                            attribs = c("A","B","C","D","E"),
-                            ref_levels = c("a1","b1","c1","d1","e1"),
-                            Y_var = "Y",
-                            id_var = "id1",
-                            cores = 1)
+het_effects <- IMCE(data = fake_data,
+                    model = cj_model,
+                    attribs = c("A","B","C","D","E"),
+                    ref_levels = c("a1","b1","c1","d1","e1"),
+                    Y = "Y",
+                    id = "id1",
+                    cores = 8)
 
 summary(het_effects)
 plot(het_effects, covar = "covar1")
