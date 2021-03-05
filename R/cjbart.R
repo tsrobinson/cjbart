@@ -82,6 +82,12 @@ IMCE <- function(data, model, attribs, ref_levels, Y, id, method = "bayes", alph
     stop("Covariates vary within id: data must not contain covariates that vary across observations of the same subject")
   }
 
+  if (!sum(sapply(attribs, function(x) typeof(data[[x]])) == "character") == length(attribs)) {
+
+    stop("Conjoint attribute columns must be character vectors")
+
+  }
+
   rm(test_data)
   gc()
 
