@@ -5,16 +5,17 @@
 
 ## Overview
 
-**cjbart** is an R package for analysing conjoint experiments using
-Bayesian Additive Regression Trees (BART), specifically focussing on
+**cjbart** is an R package for analyzing conjoint experiments using
+Bayesian Additive Regression Trees (BART), specifically focusing on
 inspecting heterogeneous treatment effects.
 
-cjbart is in its very early stages of development.
+This package is in its early stages of development, and core
+functionality is liable to change.
 
 ## Installation
 
-cjbart is can be installed directly from this repositroy, using the
-following code:
+The latest development version of **cjbart** can be installed directly
+from this repository, using the following code:
 
 ``` r
 # install.packages("devtools")

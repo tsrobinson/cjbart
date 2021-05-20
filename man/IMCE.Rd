@@ -9,39 +9,38 @@ IMCE(
   model,
   attribs,
   ref_levels,
-  Y,
-  id,
   method = "bayes",
   alpha = 0.05,
   keep_omce = FALSE,
-  cores = 1
+  cores = 1,
+  skip_checks = FALSE
 )
 }
 \arguments{
-\item{data}{A data.frame or coercible, containing all attributes, covariates, the outcome and id variables to analyse.}
+\item{data}{A data.frame, containing all attributes, covariates, the outcome and id variables to analyze.}
 
-\item{model}{A model object, the result of running \code{cjbart}}
+\item{model}{A model object, the result of running \code{cjbart()}}
 
 \item{attribs}{Vector of attribute names}
 
 \item{ref_levels}{Vector of reference levels, used to calculate marginal effects}
 
-\item{Y}{Character string -- the outcome variable}
+\item{method}{Character string, setting the variance estimation method to use. When method is "parametric", a typical combined variance estimate is employed; when \code{method = "bayes"}, the 95\% posterior interval is calculated; and when \code{method = "rubin"}, combination rules are used to combine the variance analogous to in multiple imputation analysis.}
 
-\item{id}{Character string -- the variable identifying individual respondents}
-
-\item{method}{Character string -- the variance estimation method to use. When method = "parametric", a typical combined variance estimate is employed; when method = "bayes", the 95th posterior interval is calculated; and when method = "rubin", combination rules are used to combine the variance analogous to in multiple imputation analysis.}
-
-\item{alpha}{Number between 0 and 1 -- the significance level used to compute confidence/posterior intervals. When method = "bayes", the posterior interval is calculated by taking the alpha/2 and (1-alpha/2) quantiles of the posterior draws. When method = "rubin", the confidence interval equals the IMCE +/- qnorm(alpha/2). By default, alpha = 0.05 i.e. generating a 95\% confidence/posterior interval.}
+\item{alpha}{Number between 0 and 1 -- the significance level used to compute confidence/posterior intervals. When \code{method = "bayes"}, the posterior interval is calculated by taking the alpha/2 and (1-alpha/2) quantiles of the posterior draws. When \code{method = "rubin"}, the confidence interval equals the IMCE +/- \code{qnorm(alpha/2)}. By default, alpha is 0.05 i.e. generating a 95\% confidence/posterior interval.}
 
 \item{keep_omce}{Boolean, indicating whether to keep the OMCE-level results (default = \code{FALSE})}
 
 \item{cores}{Number of CPU cores used during prediction phase}
+
+\item{skip_checks}{Boolean, indicating whether to check the structure of the data (default = \code{FALSE}). Only set this to \code{TRUE} if you are confident that the data is structured appropriately}
 }
 \value{
-\code{OMCE} returns an object of type "cjbart", a list object.
+\code{IMCE} returns an object of type "cjbart", a list object.
 \item{omce}{A data.frame containing the observation-level marginal effects}
 \item{imce}{A data.frame containing the individual-level marginal effects}
+\item{imce_upper}{A data.frame containing the upper bound of the IMCE confidence/credible interval}
+\item{imce_lower}{A data.frame containing the lower bound of the IMCE confidence/credible interval}
 \item{att_levels}{A vector containing the attribute levels}
 }
 \description{
@@ -49,8 +48,39 @@ IMCE(
 }
 \details{
 The OMCE estimates are the result of subtracting the predicted value of each observation under the reference-level category from the predicted value of each observation under the given attribute level.
-If an attribute has \code{k} levels, then this will yield \code{k-1} estimates per observation.
+If an attribute has \emph{k} levels, then this will yield \emph{k-1} estimates per observation.
 The IMCE is the average of the OMCEs for each individual within the data.
+}
+\examples{
+subjects <- 5
+rounds <- 2
+profiles <- 2
+obs <- subjects*rounds*profiles
+
+fake_data <- data.frame(A = sample(c("a1","a2"), obs, replace = TRUE),
+                        B = sample(c("b1","b2"), obs, replace = TRUE),
+                        id1 = rep(1:subjects, each=rounds),
+                        stringsAsFactors = TRUE)
+
+fake_data$Y <- sample(c(0,1), obs, replace = TRUE)
+
+cj_model <- cjbart(data = fake_data,
+                   Y = "Y",
+                   id = "id1")
+
+## Skip if not Unix due to longer CPU time
+if (.Platform$OS.type=='unix') {
+
+  het_effects <- IMCE(data = fake_data,
+                      model = cj_model,
+                      attribs = c("A","B"),
+                      ref_levels = c("a1","b1"),
+                      cores = 1)
+
+  summary(het_effects)
+}
+
+
 }
 \seealso{
 \code{\link[=cjbart]{cjbart()}}

@@ -1,7 +1,7 @@
 #' Plot Marginal Component Effects of a \code{cjbart} Object
 #' @description Plots observation-level or individual-level marginal component effects (OMCE and IMCE respectively). By default, all attribute-levels in the model are plotted.
-#' @param x Object of class \code{cjbart}, the result of running [OMCE()]
-#' @param covar Character string detailing the covariate over which to analyse heterogeneous effects
+#' @param x Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
+#' @param covar Character string detailing the covariate over which to analyze heterogeneous effects
 #' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
 #' @param se Boolean determining whether to show an estimated 95% confidence interval
 #' @param ... Additional arguments for plotting the marginal component effects (see below).
@@ -9,7 +9,7 @@
 #' @importFrom rlang .data
 #' @method plot cjbart
 #' @export
-plot.cjbart <- function(x, plot_levels = NULL, se = TRUE, covar = NULL, ...) {
+plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
 
   data <- x$imce
 
@@ -65,7 +65,7 @@ plot.cjbart <- function(x, plot_levels = NULL, se = TRUE, covar = NULL, ...) {
     ggplot2::geom_hline(yintercept = 0, size = 0.5, linetype = "dashed") +
 
     {if (!is.null(covar)) {ggplot2::aes_string(color = covar)}} +
-    {if (se) {ggplot2::geom_ribbon(ggplot2::aes(ymin = imce_lower, ymax = imce_upper), color = NA, fill = "grey60", alpha = 0.7)}} +
+    {if (se) {ggplot2::geom_ribbon(ggplot2::aes_string(ymin = "imce_lower", ymax = "imce_upper"), color = NA, fill = "grey60", alpha = 0.7)}} +
 
     ggplot2::facet_wrap(~.data$att, scales = "free") +
     ggplot2::geom_point(alpha = 0.8) +
@@ -103,10 +103,11 @@ plot.cjbart <- function(x, plot_levels = NULL, se = TRUE, covar = NULL, ...) {
 
 #' Summarizing \code{cjbart} Marginal Component Effect Estimates
 #' @description \code{summary} method for class "cjbart"
-#' @param object Object of class \code{cjbart}, the result of running [OMCE()]
+#' @param object Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
 #' @param ... Further arguments (not currently used)
-#' @return Tibble summarising the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
+#' @return Data frame summarizing the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
 #' @method summary cjbart
+#' @example inst/examples/basic_workflow.R
 #' @export
 summary.cjbart <- function(object, ...) {
 

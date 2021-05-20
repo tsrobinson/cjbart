@@ -4,25 +4,48 @@
 \alias{cjbart}
 \title{Generate Conjoint Model Using BART}
 \usage{
-cjbart(data, Y, id = NULL, ...)
+cjbart(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1, ...)
 }
 \arguments{
-\item{data}{A data.frame or coercible, containing all attributes, covariates, the outcome and id variables to analyse.}
+\item{data}{A data.frame, containing all attributes, controls, the outcome and id variables to analyze.}
 
 \item{Y}{Character string -- the outcome variable}
 
-\item{id}{Character string -- the variable identifying individual respondents}
+\item{id}{Character string -- variable identifying individual respondents (optional)}
 
-\item{...}{Other arguments passed to pbart}
+\item{round}{Character string -- variable identifying rounds of the conjoint experiment}
+
+\item{use_round}{Boolean -- whether to include the round indicator column when training the BART model (default = \code{TRUE})}
+
+\item{cores}{Integer -- number of CPU cores used in model training}
+
+\item{...}{Other arguments passed to \code{\link[BART:pbart]{BART::pbart()}}}
 }
 \value{
-Tibble summarising the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
+A trained \code{\link[BART:pbart]{BART::pbart()}} model that can be passed to \code{\link[=IMCE]{IMCE()}}
 }
 \description{
-A wrapper for the \code{BART::pbart()} function.
+A wrapper for the \code{\link[BART:pbart]{BART::pbart()}} function.
 }
 \details{
 Please note, \code{cjbart} currently only works for a binary outcome.
+}
+\examples{
+subjects <- 5
+rounds <- 2
+profiles <- 2
+obs <- subjects*rounds*profiles
+
+fake_data <- data.frame(A = sample(c("a1","a2"), obs, replace = TRUE),
+                        B = sample(c("b1","b2"), obs, replace = TRUE),
+                        id1 = rep(1:subjects, each=rounds),
+                        stringsAsFactors = TRUE)
+
+fake_data$Y <- sample(c(0,1), obs, replace = TRUE)
+
+cj_model <- cjbart(data = fake_data,
+                   Y = "Y",
+                   id = "id1")
 }
 \seealso{
 \code{\link[BART:pbart]{BART::pbart()}}

@@ -1,6 +1,6 @@
 Package: cjbart
 Title: Heterogeneous Effects Analysis of Conjoint Experiments Using Bayesian Additive Regression Trees
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
     person(given = "Thomas",
            family = "Robinson",
@@ -13,10 +13,10 @@ Authors@R: c(
            email = "raymond.duch@nuffield.ox.ac.uk",
            comment = c(ORCID = "0000-0002-1166-7674"))
     )
-Description: A tool for analysing conjoint experiments using 'BART', a Bayesian machine learning method. This tool focuses specifically on estimating and visualising the heterogeneity within marginal component effects, at both the observation- and individual-level.
+Description: A tool for analyzing conjoint experiments using 'BART', a Bayesian machine learning method. This tool focuses specifically on estimating and visualizing the heterogeneity within marginal component effects, at the observation- and individual-level.
 License: Apache License (>= 2.0)
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends:
@@ -30,6 +30,7 @@ Imports:
 Suggests: 
     testthat,
     knitr,
+    cregg,
     rmarkdown
 VignetteBuilder: knitr
 URL: https://github.com/tsrobinson/cjbart

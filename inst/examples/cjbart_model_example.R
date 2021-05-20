@@ -13,17 +13,3 @@ fake_data$Y <- sample(c(0,1), obs, replace = TRUE)
 cj_model <- cjbart(data = fake_data,
                    Y = "Y",
                    id = "id1")
-
-## Skip if not Unix due to longer CPU time
-if (.Platform$OS.type=='unix') {
-
-  het_effects <- IMCE(data = fake_data,
-                      model = cj_model,
-                      attribs = c("A","B"),
-                      ref_levels = c("a1","b1"),
-                      cores = 1)
-
-  summary(het_effects)
-}
-
-

@@ -10,7 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7, fig.height = 5
 )
 
 set.seed(89)
@@ -19,54 +20,57 @@ library(ggplot2)
 
 This vignette provides a brief example of how to estimate heterogeneous effects in conjoint experiments, using \code{cjbart}.
 
-Suppose we conducted a conjoint experiment on 500 individuals, where each individual makes 5 discrete choices between two profiles. The resultant data would include 5000 observations. Within this conjoint, suppose there are five attributes A-E, each with 3 levels. We also record two covariates of each subject. Let's mock up this data:
+Suppose we conducted a conjoint experiment on 250 individuals, where each individual makes 5 discrete choices between two profiles. The resultant data would include 2500 observations. Within this conjoint, suppose there are five attributes A-E, each with 3 levels. We also record two covariates of each subject. Let's mock up this data:
 
 ```{r data, include=TRUE}
-subjects <- 500
+subjects <- 250
 rounds <- 5
 profiles <- 2
 obs <- subjects*rounds*profiles
 
-fake_data <- data.frame(id1 = rep(1:subjects, each=rounds*profiles),
-                        Y = c(1,0),
-                        A = sample(c("a1","a2","a3"), obs, replace = TRUE),
+fake_data <- data.frame(A = sample(c("a1","a2","a3"), obs, replace = TRUE),
                         B = sample(c("b1","b2","b3"), obs, replace = TRUE),
                         C = sample(c("c1","c2","c3"), obs, replace = TRUE),
                         D = sample(c("d1","d2","d3"), obs, replace = TRUE),
                         E = sample(c("e1","e2","e3"), obs, replace = TRUE),
-                        covar1 = rep(runif(subjects, 0 ,100), 
-                                     each = rounds*profiles),
-                        covar2 = rep(sample(c(1,0), subjects, 
-                                            replace = TRUE), 
-                                     each = rounds*profiles),
+
+                        covar1 = rep(runif(subjects, 0 ,1),
+                                     each = rounds),
+                        covar2 = rep(sample(c(1,0),
+                                            subjects,
+                                            replace = TRUE),
+                                     each = rounds),
+
+                        id1 = rep(1:subjects, each=rounds),
                         stringsAsFactors = TRUE)
+
+fake_data$Y <- ifelse(fake_data$E == "e2",
+                      rbinom(obs, 1, fake_data$covar1),
+                      sample(c(0,1), obs, replace = TRUE))
 ```
 
 ## Train a probit BART model on conjoint data
 
-To estimate a conjoint model on this data we will use the `cjbart()` function, which uses Bayesian Additive Regression Trees (BART) to approximate the relationships between the outcome (a binary choice), the randomised attribute-levels, and the included covariates. The result is a `pbart` model, which we will use to estimate heterogeneity in the treatment effects:
+To estimate a conjoint model on this data we will use the `cjbart()` function, which uses Bayesian Additive Regression Trees (BART) to approximate the relationships between the outcome (a binary choice), the randomized attribute-levels, and the included covariates. The result is a modified `pbart` model, which we will use to estimate heterogeneity in the treatment effects:
 
 ```{r train, include=TRUE}
-library(cjbart)
-cj_model <- cjbart(data = fake_data,
-                   Y_var = "Y", 
-                   id_var = "id1")
+cj_model <- cjbart::cjbart(data = fake_data,
+                   Y = "Y", 
+                   id = "id1")
 
 ```
 
-To generate heterogeneity estimates at the observation- and individual-level, we use the `OMCE()` function. We pass in both the original experimental data, and the conjoint model generated in the last step. At this point, we also declare the names of the conjoint attribute variables (`attribs`) and the reference category we want to use for each attribute when calculating the marginal component effects (`ref_levels`). The vector of reference levels must be of the same length as `attribs`, with the level at position `i` corresponding to the `attrib[i]`:
+To generate heterogeneity estimates at the observation- and individual-level, we use the `IMCE()` function. We pass in both the original experimental data, and the conjoint model generated in the last step. At this point, we also declare the names of the conjoint attribute variables (`attribs`) and the reference category we want to use for each attribute when calculating the marginal component effects (`ref_levels`). The vector of reference levels must be of the same length as `attribs`, with the level at position `i` corresponding to the `attrib[i]`:
 
 ```{r OMCE, include=TRUE}
-het_effects <- cjbart::OMCE(data = fake_data, 
+het_effects <- cjbart::IMCE(data = fake_data, 
                             model = cj_model, 
                             attribs = c("A","B","C","D","E"),
                             ref_levels = c("a1","b1","c1","d1","e1"),
-                            Y_var = "Y", 
-                            id_var = "id1", 
-                            cores = 4)
+                            cores = 1)
 ```
 
-`OMCE()` returns an object of class "cjbart", which is a list with three objects: `omce` estimates, `imce` estimates, and a vector of attribute levels (used when plotting the results).
+`IMCE()` returns an object of class "cjbart", which contains the individual-level marginal component effects (IMCEs), matrices reflecting the upper and lower values of each estimate's confidence interval RESPECTIVELY, and optionally the underlying observation-level marginal component effects (OMCEs) when `keep_omces = TRUE`.
 
 It is likely that users will want to compare the conjoint estimation strategy to other estimation strategies, such as logistic regression models. We can recover the average marginal component effect (AMCE) for the BART model using the `summary()` command:
 
@@ -74,73 +78,27 @@ It is likely that users will want to compare the conjoint estimation strategy to
 summary(het_effects)
 ```
 
-We find that the derived AMCES are consistent with parametric calculation of the AMCEs, using estimating packages like `cregg`:
+We can plot the IMCEs, color coding the points by some covariate value, using the in-built `plot()` function:
+
+```{r plot_imces}
+plot(het_effects, covar = "covar1")
+```
+
+To aid presentation, the plot function can restrict which attribute-levels are displayed by using the `plot_levels` argument:
+
+```{r plot_imces2}
+plot(het_effects, covar = "covar1", plot_levels = c("a2","a3","b2","b3"))
+```
+
+Finally, it is also to compare the derived AMCES against a parametric calculation of the AMCEs, using a conjoint estimation package like \code{cregg}:
 
 ```{r cregg}
-
 cregg_amce <- cregg::cj(fake_data, Y ~ A + B + C + D + E, id = ~ id1)
 cjbart_amce <- summary(het_effects)
 
 colnames(cjbart_amce)[1] <- "level"
 
-
-
 merge(cregg_amce[,c("level","estimate")], cjbart_amce[,c("level","AMCE")])
 
 ```
-
-`cjbart` also contains a plotting function to visualise heterogeneity in the data.
-
-## Immigration (Hainmueller et al 2014)
-
-```{r immigration}
-library(cregg)
-data("immigration")
-immigration$LangPos <- NULL
-immigration$PriorPos <- NULL
-immigration$profile <- NULL
-immigration$contest_no <- NULL
-
-immig_model <- cjbart(data = immigration,
-                   Y_var = "ChosenImmigrant", 
-                   id_var = "CaseID")
-
-immig_attribs <- c("Education","Gender","CountryOfOrigin",
-                   "ReasonForApplication","Job","JobExperience",
-                   "JobPlans","PriorEntry","LanguageSkills")
-
-immig_refs <- sapply(immig_attribs, function (x) levels(immigration[[x]])[1])
-
-immig_het <- cjbart::OMCE(data = immigration, 
-                            model = immig_model, 
-                            attribs = immig_attribs,
-                            ref_levels = immig_refs,
-                            Y_var = "ChosenImmigrant", 
-                            id_var = "CaseID", 
-                            cores = 8)
-
-cjbart_immig <- summary(immig_het)
-colnames(cjbart_immig)[1] <- "level"
-
-cregg_immig <- cregg::cj(immigration, formula = as.formula(paste0("ChosenImmigrant ~ ", paste0(immig_attribs, collapse = " + "))))
-
-comparison <- merge(cregg_immig[,c("feature","level","estimate")], cjbart_immig[,c("level","AMCE")])
-colnames(comparison) <- c("Level","Feature","Parametric","cjbart")
-
-comparison
-
-```
-
-We can visualise these comparisons too:
-
-```{r immig_fig}
-
-ggplot(comparison, aes(x = Parametric, y = cjbart, color = Feature)) +
-  geom_point() +
-  geom_abline(linetype = "dashed", color = "grey")+
-  theme_minimal() +
-  theme(legend.position = "bottom")
-
-```
-
 

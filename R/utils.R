@@ -9,9 +9,9 @@
 
     data[,missing_vars] <- Map(as.factor, subset(data, select = missing_vars))
 
-    warning("The following variables were converted to factors: ",
-            paste0(missing_vars, collapse = ", ")
-    )
+    # message("The following variables were converted to factors: ",
+    #         paste0(missing_vars, collapse = ", ")
+    # )
 
   }
 
