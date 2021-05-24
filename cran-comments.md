@@ -1,3 +1,9 @@
+## Resubmission
+
+In this submission, we have:
+* Shortened the package title to less than 65 characters
+* Added a link in the description field to the referenced method
+
 ## Submission
 
 This the first submission of this package

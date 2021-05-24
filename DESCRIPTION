@@ -1,5 +1,5 @@
 Package: cjbart
-Title: Heterogeneous Effects Analysis of Conjoint Experiments Using Bayesian Additive Regression Trees
+Title: Heterogeneous Effects Analysis of Conjoint Experiments
 Version: 0.1.0
 Authors@R: c(
     person(given = "Thomas",
@@ -13,7 +13,7 @@ Authors@R: c(
            email = "raymond.duch@nuffield.ox.ac.uk",
            comment = c(ORCID = "0000-0002-1166-7674"))
     )
-Description: A tool for analyzing conjoint experiments using 'BART', a Bayesian machine learning method. This tool focuses specifically on estimating and visualizing the heterogeneity within marginal component effects, at the observation- and individual-level.
+Description: A tool for analyzing conjoint experiments using Bayesian Additive Regression Trees ('BART'), a machine learning method developed by Chipman, George and McCulloch (2010) <doi:10.1214/09-AOAS285>. This tool focuses specifically on estimating and visualizing the heterogeneity within marginal component effects, at the observation- and individual-level.
 License: Apache License (>= 2.0)
 Encoding: UTF-8
 LazyData: false
