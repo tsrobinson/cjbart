@@ -4,7 +4,7 @@ This submission fixes the unbalanced code chunk delimiter issue that led to cjba
 
 ## Test environments
 * Local OS X install, R 4.1.0
-* Ubuntu Linux 20.04.1 LTS, R-release, GCC
+* Ubuntu Linux 20.04.1 LTS, R-devel, GCC
 * Ubuntu Linux 20.04.1 LTS, R-release, GCC
 * win-builder (devel and release)
 

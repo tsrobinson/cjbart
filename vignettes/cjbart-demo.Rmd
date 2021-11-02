@@ -74,7 +74,7 @@ het_effects <- cjbart::IMCE(data = fake_data,
 
 It is likely that users will want to compare the conjoint estimation strategy to other estimation strategies, such as logistic regression models. We can recover the average marginal component effect (AMCE) for the BART model using the `summary()` command:
 
-````{r summary}
+```{r summary}
 summary(het_effects)
 ```
 
