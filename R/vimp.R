@@ -3,10 +3,14 @@
 #' @param model Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
 #' @param outcomes An optional vector of attribute levels to generate importance metrics for. By default, all attribute-levels are analyzed.
 #' @param covars An optional vector of covariates to include in the importance metric check. By default, all covariates are included in each importance model.
-#' @return A long data.frame of variable importance scores for each covariate per attribute-level, as well as the estimated 95% confidence intervals for each score.
-#' @details Having generated a schedule of individual-level marginal component effect estimates, for each attribute-level this function fits a random forest model using the supplied covariates as predictors. It then calculates a variable importance measure (VIMP) for each covariate. The VIMP assesses how important each covariate is in terms of partitioning the predicted individual-level effects distribution, and can thus be used as an indicator of where heterogeneity exists.
-#' To recover our VIMP measure, we used permutation-based importance metrics recovered from random forest models (see [randomForestSRC::rfsrc()]. To permute the data, this function uses random node assignment where cases are randomly assigned to a daughter node whenever a tree splits on the target variable (see \insertCite{ishwaran2008random}{cjbart}). Importance is defined in terms of how this random assignment degrades the performance of the forest. Higher degradation indicates a variable is more important to the prediction.
-#' Variance estimates for the importance measures are recovered using the delete-d jackknife estimator developed by \insertCite{ishwaran2019standard;textual}{cjbart} and implemented in \pkg{randomForestSRC} \insertCite{randomforestsrc}{cjbart}. The jackknife method has inherent bias correction properties, making it particularly effective for variable selection exercises such as in identifying drivers of heterogeneity.
+#' @return A "long" data.frame of variable importance scores for each combination of covariates and attribute-levels, as well as the estimated 95% confidence intervals for each metric.
+#' @details Having generated a schedule of individual-level marginal component effect estimates, this function fits a random forest model for each attribute-level using the supplied covariates as predictors. It then calculates a variable importance measure (VIMP) for each covariate. The VIMP method assesses how important each covariate is in terms of partitioning the predicted individual-level effects distribution, and can thus be used as an indicator of which variables drive heterogeneity in the IMCEs.
+#'
+#' To recover a VIMP measure, we used permutation-based importance metrics recovered from random forest models estimated using [randomForestSRC::rfsrc()]. To permute the data, this function uses random node assignment, whereby cases are randomly assigned to a daughter node whenever a tree splits on the target variable \insertCite{@see @ishwaran2008random}{cjbart}. Importance is defined in terms of how random node assignment degrades the performance of the forest. Higher degradation indicates a variable is more important to prediction.
+#'
+#' Variance estimates of each variable's importance are subsequently recovered using the delete-d jackknife estimator developed by \insertCite{ishwaran2019standard;textual}{cjbart}. The jackknife method has inherent bias correction properties, making it particularly effective for variable selection exercises such as identifying drivers of heterogeneity.
+#' @references \insertAllCited{}
+#' @seealso [randomForestSRC::rfsrc()] and [randomForestSRC::subsample()]
 #' @export
 het_vimp <- function(model, outcomes = NULL, covars = NULL) {
 

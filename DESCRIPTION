@@ -1,6 +1,6 @@
 Package: cjbart
 Title: Heterogeneous Effects Analysis of Conjoint Experiments
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person(given = "Thomas",
            family = "Robinson",
