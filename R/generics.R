@@ -135,3 +135,61 @@ summary.cjbart <- function(object, ...) {
 
 }
 
+#' Plot Variable Importance Matrix for Heterogeneity Analysis
+#' @description Plots a heatmap of variable importance, across predicted IMCEs. By default, all attribute-levels and covariates in the model are plotted.
+#' @param x Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
+#' @param covars Optional vector of covariate names to plot. By default, all included covariates are shown.
+#' @param att_levels Optional vector of attribute-levels to plot. By default, all attribute-levels are shown.
+#' @param ... Additional arguments (not currently used)
+#' @return Plot of covariate importance scores
+#' @method plot cjbart.vimp
+#' @export
+plot.cjbart.vimp <- function(x, covars = NULL, att_levels = NULL,  ...) {
+
+  plot_data <- x
+
+  if (!is.null(covars)) {
+
+    plot_data <- plot_data[plot_data$covar %in% covars,]
+
+  }
+
+  if (!is.null(att_levels)) {
+
+    plot_data <- plot_data[plot_data$outcome %in% att_levels,]
+
+  }
+
+  if (is.null(att_levels) | length(att_levels) > 1) {
+
+    ggplot2::ggplot(plot_data,
+                    ggplot2::aes_string(x = "covar",
+                                        y = "outcome",
+                                        fill = "importance")) +
+      ggplot2::facet_grid(attribute ~ ., space = "free", scales = "free", switch = "y") +
+      ggplot2::geom_tile() +
+      ggplot2::scale_fill_gradient(low="white", high="firebrick2") +
+      ggplot2::labs(x = "Covariates", y = "Attribute-level", fill = "Importance") +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle=45, vjust = 1, hjust = 1)) +
+      ggplot2::theme_classic()
+
+  } else {
+
+    message("Plotting importance scores for single attribute-level (with 95 percent confidence intervals)")
+
+    ggplot2::ggplot(plot_data,
+                    ggplot2::aes_string(y = "covar",
+                                        x = "importance",
+                                        xmin = "lower2.5",
+                                        xmax = "upper97.5")) +
+      ggplot2::geom_point() +
+      ggplot2::geom_errorbarh(height = 0.2) +
+      ggplot2::labs(x = "Standardised Importance",
+                    y = "Covariates") +
+      ggplot2::xlim(min(plot_data$lower2.5)-1, max(plot_data$upper97.5)+1) +
+      ggplot2::theme_classic()
+
+  }
+
+}
+
