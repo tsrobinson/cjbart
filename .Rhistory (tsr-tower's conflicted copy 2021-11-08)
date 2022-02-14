@@ -1,6 +1,0 @@
-setwd("~/Dropbox/cjbart_paper")
-vacc_imces <- readRDS("data/vacc_cjbart.RDS")
-imce_sched <- vacc_imces$imce
-setwd("~/Dropbox/cjbart")
-rm(imce_sched)
-View(vacc_imces)

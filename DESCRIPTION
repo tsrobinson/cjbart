@@ -16,7 +16,6 @@ Authors@R: c(
 Description: A tool for analyzing conjoint experiments using Bayesian Additive Regression Trees ('BART'), a machine learning method developed by Chipman, George and McCulloch (2010) <doi:10.1214/09-AOAS285>. This tool focuses specifically on estimating, identifying, and visualizing the heterogeneity within marginal component effects, at the observation- and individual-level. It uses a variable importance measure ('VIMP') with delete-d jackknife variance estimation, following Ishwaran and Lu (2019) <doi:10.1002/sim.7803>, to obtain bias-corrected estimates of which variables drive heterogeneity in the predicted individual-level effects.
 License: Apache License (>= 2.0)
 Encoding: UTF-8
-LazyData: false
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Depends:

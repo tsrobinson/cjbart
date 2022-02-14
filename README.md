@@ -1,5 +1,13 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- badges: start -->
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/cjbart)](https://CRAN.R-project.org/package=cjbart)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/tsrobinson/cjbart/workflows/R-CMD-check/badge.svg)](https://github.com/tsrobinson/cjbart/actions)
+<!-- badges: end -->
 
 # cjbart
 

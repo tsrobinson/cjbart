@@ -1,6 +1,6 @@
 # cjbart 0.2.1
 
-* Minor internal fixes to keep pace with stats() package changes
+* Minor internal changes to keep pace with R development
 * Minor changes to vignette wording
 
 # cjbart 0.2.0

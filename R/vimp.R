@@ -11,6 +11,7 @@
 #' Variance estimates of each variable's importance are subsequently recovered using the delete-d jackknife estimator developed by \insertCite{ishwaran2019standard;textual}{cjbart}. The jackknife method has inherent bias correction properties, making it particularly effective for variable selection exercises such as identifying drivers of heterogeneity.
 #' @references \insertAllCited{}
 #' @seealso [randomForestSRC::rfsrc()] and [randomForestSRC::subsample()]
+#' @importFrom Rdpack reprompt
 #' @export
 het_vimp <- function(model, outcomes = NULL, covars = NULL) {
 
