@@ -1,3 +1,8 @@
+# cjbart 0.2.1
+
+* Minor internal fixes to keep pace with stats() package changes
+* Minor changes to vignette wording
+
 # cjbart 0.2.0
 
 * Addresses unbalanced chunk delimiters in package vignette

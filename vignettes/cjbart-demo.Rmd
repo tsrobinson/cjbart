@@ -20,7 +20,7 @@ library(ggplot2)
 
 This vignette provides a brief example of how to estimate heterogeneous effects in conjoint experiments, using \code{cjbart}.
 
-Suppose we conducted a conjoint experiment on 250 individuals, where each individual makes 5 discrete choices between two profiles. The resultant data would include 2500 observations. Within this conjoint, suppose there are five attributes A-E, each with 3 levels. We also record two covariates of each subject. Let's mock up this data:
+We first simulate a basic conjoint design for the purpose of illustration. Suppose we conducted a conjoint experiment on 250 individuals, where each individual makes 5 discrete choices between two profiles. Each profile has five attributes (A-E), and we also record two covariates for each subject.  The resulting data contains 2500 observations. 
 
 ```{r data, include=TRUE}
 subjects <- 250
@@ -87,7 +87,7 @@ plot(het_effects, covar = "covar1")
 To aid presentation, the plot function can restrict which attribute-levels are displayed by using the `plot_levels` argument:
 
 ```{r plot_imces2}
-plot(het_effects, covar = "covar1", plot_levels = c("a2","a3","b2","b3"))
+plot(het_effects, covar = "covar1", plot_levels = c("a2","a3","e2","e3"))
 ```
 
 Finally, it is also to compare the derived AMCES against a parametric calculation of the AMCEs, using a conjoint estimation package like \code{cregg}:

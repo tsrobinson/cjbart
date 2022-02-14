@@ -1,6 +1,6 @@
 Package: cjbart
 Title: Heterogeneous Effects Analysis of Conjoint Experiments
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: c(
     person(given = "Thomas",
            family = "Robinson",
@@ -27,8 +27,8 @@ Imports:
     rlang,
     tidyr,
     ggplot2,
-    Rdpack,
-    randomForestSRC
+    randomForestSRC,
+    Rdpack
 Suggests: 
     testthat,
     knitr,

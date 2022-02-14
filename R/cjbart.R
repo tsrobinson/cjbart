@@ -273,9 +273,9 @@ IMCE <- function(data,
       )
     )
 
-  results_imce <- stats::aggregate(formula = agg_formula,
-                            data = results,
-                            FUN = mean)
+  results_imce <- stats::aggregate(agg_formula,
+                                   data = results,
+                                   FUN = mean)
 
   # Double check nrow now we have covariates recovered
   if (!(nrow(covars) == nrow(results_imce))) {
@@ -321,12 +321,6 @@ IMCE <- function(data,
     imce_upper <- cbind(imce_upper, id = results_imce[[id]])
 
   }
-
-  # imce_upper <- cbind(results_imce[[id]], imce_upper)
-  # imce_lower <- cbind(results_imce[[id]], imce_lower)
-
-  # colnames(imce_upper)[1] <- id
-  # colnames(imce_lower)[1] <- id
 
   out_obj <- list(imce = results_imce,
                   imce_lower = as.data.frame(imce_lower),
@@ -387,7 +381,7 @@ RMCE <- function(imces) {
     )
   )
 
-  results_rmce <- stats::aggregate(formula = agg_formula,
+  results_rmce <- stats::aggregate(agg_formula,
                                    data = imces$omce,
                                    FUN = mean)
 

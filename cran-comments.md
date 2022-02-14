@@ -1,6 +1,10 @@
 ## Submission
 
-This submission fixes the unbalanced code chunk delimiter issue that led to cjbart 0.1.0 being archived on CRAN. It also provides new functionality.
+This submission addresses the change in argument name for stats::aggregate.
+
+Additional changes:
+* Minor changes to vignette demo
+* Remove unnecessary import Rdpack
 
 ## Test environments
 * Local OS X install, R 4.1.0
@@ -14,3 +18,6 @@ There were no ERRORs or WARNINGs and 0 NOTEs.
 
 ## Downstream dependencies
 There are no downstream dependencies currently.
+
+?het_vimp
+
