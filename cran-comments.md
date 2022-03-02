@@ -1,10 +1,6 @@
 ## Submission
 
-This submission addresses the change in argument name within stats::aggregate
-
-Additional changes:
-* Added import from Rdpack to address NOTE raised in previous CRAN checks
-* Minor changes to vignette demo
+This submission is a copy of v0.2.1, which was archived due to its dependency on randomForestSRC. We are re-submitting now that randomForestSRC has been re-released on CRAN.
 
 ## Test environments
 * Local OS X install, R 4.1.0

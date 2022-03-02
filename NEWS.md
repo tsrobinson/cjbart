@@ -1,3 +1,7 @@
+# cjbart 0.2.2
+
+* Re-release after dependencies back on CRAN
+
 # cjbart 0.2.1
 
 * Minor internal changes to keep pace with R development
