@@ -1,9 +1,9 @@
 ## Submission
 
-This submission is a copy of v0.2.1, which was archived due to its dependency on randomForestSRC. We are re-submitting now that randomForestSRC has been re-released on CRAN.
+This submission makes minor changes to refresh and update the package.
 
 ## Test environments
-* Local OS X install, R 4.1.0
+* Local OS X install, R 4.1.2
 * Ubuntu Linux 20.04.1 LTS, R-release, GCC
 * Fedora Linux, R-devel, clang, gfortran
 * Windows Server 2022, R-devel, 64 bit

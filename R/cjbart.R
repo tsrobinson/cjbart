@@ -73,6 +73,7 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
 #' @param model A model object, the result of running \code{cjbart()}
 #' @param attribs Vector of attribute names
 #' @param ref_levels Vector of reference levels, used to calculate marginal effects
+#' @param ignore_attribs Vector of conjoint attributes to drop from IMCE estimation (default =  \code{NULL}). Ignoring attributes can be useful with large data, where calculating IMCEs for every attribute in one call is too computationally intensive
 #' @param method Character string, setting the variance estimation method to use. When method is "parametric", a typical combined variance estimate is employed; when \code{method = "bayes"}, the 95% posterior interval is calculated; and when \code{method = "rubin"}, combination rules are used to combine the variance analogous to in multiple imputation analysis.
 #' @param alpha Number between 0 and 1 -- the significance level used to compute confidence/posterior intervals. When \code{method = "bayes"}, the posterior interval is calculated by taking the alpha/2 and (1-alpha/2) quantiles of the posterior draws. When \code{method = "rubin"}, the confidence interval equals the IMCE +/- \code{qnorm(alpha/2)}. By default, alpha is 0.05 i.e. generating a 95% confidence/posterior interval.
 #' @param keep_omce Boolean, indicating whether to keep the OMCE-level results (default = \code{FALSE})
@@ -95,6 +96,7 @@ IMCE <- function(data,
                  model,
                  attribs,
                  ref_levels,
+                 ignore_attribs = NULL,
                  method = "bayes",
                  alpha = 0.05,
                  keep_omce = FALSE,
@@ -254,7 +256,7 @@ IMCE <- function(data,
 
   message("Calculating IMCEs")
 
-  covars <- results[,!(names(results) %in% out_levels)]
+  covars <- results[,!(names(results) %in% c(out_levels,ignore_attribs))]
 
   # In case only id is supplied, make sure covariates stored as data.frame
   if (is.data.frame(covars)) {

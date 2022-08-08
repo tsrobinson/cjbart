@@ -1,3 +1,7 @@
+# cjbart 0.2.3
+
+* Add option to drop attributes from IMCE analysis
+
 # cjbart 0.2.2
 
 * Re-release after dependencies back on CRAN

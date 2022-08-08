@@ -9,6 +9,7 @@ IMCE(
   model,
   attribs,
   ref_levels,
+  ignore_attribs = NULL,
   method = "bayes",
   alpha = 0.05,
   keep_omce = FALSE,
@@ -24,6 +25,8 @@ IMCE(
 \item{attribs}{Vector of attribute names}
 
 \item{ref_levels}{Vector of reference levels, used to calculate marginal effects}
+
+\item{ignore_attribs}{Vector of conjoint attributes to drop from IMCE estimation (default =  \code{NULL}). Ignoring attributes can be useful with large data, where calculating IMCEs for every attribute in one call is too computationally intensive}
 
 \item{method}{Character string, setting the variance estimation method to use. When method is "parametric", a typical combined variance estimate is employed; when \code{method = "bayes"}, the 95\% posterior interval is calculated; and when \code{method = "rubin"}, combination rules are used to combine the variance analogous to in multiple imputation analysis.}
 
