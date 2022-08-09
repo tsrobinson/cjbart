@@ -1,6 +1,7 @@
-# cjbart 0.2.3
+# cjbart 0.3.0
 
 * Add option to drop attributes from IMCE analysis
+* Add new pIMCE() function to calculate population-weighted IMCEs
 
 # cjbart 0.2.2
 

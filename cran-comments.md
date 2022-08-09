@@ -1,6 +1,6 @@
 ## Submission
 
-This submission makes minor changes to refresh and update the package.
+This submission adds new functionality and implements minor changes to existing functions.
 
 ## Test environments
 * Local OS X install, R 4.1.2
