@@ -48,6 +48,18 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
 
   train_Y <- data[[Y]]
 
+  # Store factor levels
+  factor_levels <- list()
+  for (v in colnames(train_X)) {
+
+    if (is.factor(train_X[[v]])) {
+
+      factor_levels[[v]] <- levels(train_X[[v]])
+
+    }
+
+  }
+
   if (.Platform$OS.type=='unix') {
     train_model <- BART::mc.pbart(x.train = as.data.frame(train_X),
                                   y.train = train_Y, mc.cores = cores, ...)
@@ -61,6 +73,7 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
   train_model$id_col <- id
   train_model$round_col <- round
   train_model$Y_col <- Y
+  train_model$factor_levels <- factor_levels
 
   return(train_model)
 
@@ -71,9 +84,8 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
 #' @description \code{IMCE} calculates the individual-level marginal component effects from a BART-estimated conjoint model.
 #' @param data A data.frame, containing all attributes, covariates, the outcome and id variables to analyze.
 #' @param model A model object, the result of running \code{cjbart()}
-#' @param attribs Vector of attribute names
+#' @param attribs Vector of attribute names for which IMCEs will be predicted
 #' @param ref_levels Vector of reference levels, used to calculate marginal effects
-#' @param ignore_attribs Vector of conjoint attributes to drop from IMCE estimation (default =  \code{NULL}). Ignoring attributes can be useful with large data, where calculating IMCEs for every attribute in one call is too computationally intensive
 #' @param method Character string, setting the variance estimation method to use. When method is "parametric", a typical combined variance estimate is employed; when \code{method = "bayes"}, the 95% posterior interval is calculated; and when \code{method = "rubin"}, combination rules are used to combine the variance analogous to in multiple imputation analysis.
 #' @param alpha Number between 0 and 1 -- the significance level used to compute confidence/posterior intervals. When \code{method = "bayes"}, the posterior interval is calculated by taking the alpha/2 and (1-alpha/2) quantiles of the posterior draws. When \code{method = "rubin"}, the confidence interval equals the IMCE +/- \code{qnorm(alpha/2)}. By default, alpha is 0.05 i.e. generating a 95% confidence/posterior interval.
 #' @param keep_omce Boolean, indicating whether to keep the OMCE-level results (default = \code{FALSE})
@@ -96,7 +108,6 @@ IMCE <- function(data,
                  model,
                  attribs,
                  ref_levels,
-                 ignore_attribs = NULL,
                  method = "bayes",
                  alpha = 0.05,
                  keep_omce = FALSE,
@@ -256,7 +267,7 @@ IMCE <- function(data,
 
   message("Calculating IMCEs")
 
-  covars <- results[,!(names(results) %in% c(out_levels,ignore_attribs))]
+  covars <- results[,!(names(results) %in% c(out_levels))]
 
   # In case only id is supplied, make sure covariates stored as data.frame
   if (is.data.frame(covars)) {
