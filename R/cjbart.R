@@ -491,6 +491,7 @@ AMCE <- function(data,
   Y <- model$Y_col
   round <- model$round_col
   id <- model$id_col
+  type <- model$type
 
   # Check optional args
   if (method != "bayes") {
@@ -553,15 +554,28 @@ AMCE <- function(data,
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
                                     levels = levels(X_pred0[[attribs[i]]]))
 
-    phat_0 <- .quiet(
+    if (type == "choice") {
+      phat_0 <- .quiet(
 
-      predict(
+        predict(
 
-        model,
-        newdata = BART::bartModelMatrix(X_pred0),
-        mc.cores = cores
-      )
-    )$prob.test
+          model,
+          newdata = BART::bartModelMatrix(X_pred0),
+          mc.cores = cores
+        )
+      )$prob.test
+    } else {
+      phat_0 <- .quiet(
+
+        predict(
+
+          model,
+          newdata = BART::bartModelMatrix(X_pred0),
+          mc.cores = cores
+        )
+      )$yhat.test
+    }
+
 
     for (att_level in att_levels) {
 
@@ -571,16 +585,29 @@ AMCE <- function(data,
                                       levels = levels(X_pred0[[attribs[i]]]))
 
       # Get predictions
-      phat_1 <- .quiet(
+      if (type == "choice") {
+        phat_1 <- .quiet(
 
-        predict(
+          predict(
 
-          model,
-          newdata = BART::bartModelMatrix(X_pred1),
-          mc.cores = cores
+            model,
+            newdata = BART::bartModelMatrix(X_pred1),
+            mc.cores = cores
 
-        )
-      )$prob.test
+          )
+        )$prob.test
+      } else {
+        phat_1 <- .quiet(
+
+          predict(
+
+            model,
+            newdata = BART::bartModelMatrix(X_pred1),
+            mc.cores = cores
+
+          )
+        )$yhat.test
+      }
 
       # Get OMCE for single attribute-level comparison and store
       amce_est <- mean(colMeans(phat_1) - colMeans(phat_0))
