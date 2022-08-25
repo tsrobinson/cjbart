@@ -3,6 +3,7 @@
 #' @description A wrapper for the [BART::pbart()] function.
 #' @param data A data.frame, containing all attributes, controls, the outcome and id variables to analyze.
 #' @param Y Character string -- the outcome variable
+#' @param type Type of conjoint experiment -- either "choice" (for forced-choice outcomes) or "rating" (for interval ratings). If NULL (default), the function will attempt to automatically detect the outcome type.
 #' @param id Character string -- variable identifying individual respondents (optional)
 #' @param round Character string -- variable identifying rounds of the conjoint experiment
 #' @param use_round Boolean -- whether to include the round indicator column when training the BART model (default = \code{TRUE})
@@ -14,7 +15,7 @@
 #' @seealso [BART::pbart()]
 #' @export
 #' @example inst/examples/cjbart_model_example.R
-cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1, ...) {
+cjbart <- function(data, Y, type = NULL, id = NULL, round = NULL, use_round = TRUE, cores = 1, ...) {
 
   if (missing(Y)) {
     stop("Please declare the output variable using the Y argument.")
@@ -48,6 +49,20 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
 
   train_Y <- data[[Y]]
 
+  if (!missing(type)) {
+    if !(type %in% c("choice","rating")) {
+      stop("Invalid type argument: must be 'choice' (forced-choice outcomes) or 'rating' (interval ratings outcomes), or NULL.")
+    }
+  } else {
+    if setequal(unique(train_Y),c(0,1)) {
+      type = "choice"
+      message("Detected force-choiced outcome")
+    } else {
+      type = "rating"
+      message("Detected interval (rating) outcome")
+    }
+  }
+
   # Store factor levels
   factor_levels <- list()
   for (v in colnames(train_X)) {
@@ -61,11 +76,25 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
   }
 
   if (.Platform$OS.type=='unix') {
-    train_model <- BART::mc.pbart(x.train = as.data.frame(train_X),
-                                  y.train = train_Y, mc.cores = cores, ...)
+
+    if (type == "choice") {
+      train_model <- BART::mc.pbart(x.train = as.data.frame(train_X),
+                                    y.train = train_Y, mc.cores = cores, ...)
+    } else {
+      train_model <- BART::mc.wbart(x.train = as.data.frame(train_X),
+                                    y.train = train_Y, mc.cores = cores, ...)
+    }
+
+
   } else {
-    train_model <- BART::pbart(x.train = as.data.frame(train_X),
-                               y.train = train_Y, ...)
+
+    if (type == "choice") {
+      train_model <- BART::pbart(x.train = as.data.frame(train_X),
+                                 y.train = train_Y, ...)
+    } else {
+      train_model <- BART::wbart(x.train = as.data.frame(train_X),
+                                 y.train = train_Y, ...)
+    }
   }
 
   gc()
@@ -74,6 +103,7 @@ cjbart <- function(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1
   train_model$round_col <- round
   train_model$Y_col <- Y
   train_model$factor_levels <- factor_levels
+  train_model$type <- type
 
   return(train_model)
 
