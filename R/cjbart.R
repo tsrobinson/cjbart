@@ -150,6 +150,7 @@ IMCE <- function(data,
   Y <- model$Y_col
   round <- model$round_col
   id <- model$id_col
+  type <- model$type
 
   # Check optional args
   if (!(method %in% c("average","bayes","rubin"))) {
@@ -225,15 +226,28 @@ IMCE <- function(data,
     X_pred0[[attribs[i]]] <- factor(ref_levels[i],
                                     levels = levels(X_pred0[[attribs[i]]]))
 
-    phat_0 <- .quiet(
 
-      predict(
+    if (type == "choice") {
+      phat_0 <- .quiet(
 
-        model,
-        newdata = BART::bartModelMatrix(X_pred0),
-        mc.cores = cores
-      )
-    )$prob.test
+        predict(
+
+          model,
+          newdata = BART::bartModelMatrix(X_pred0),
+          mc.cores = cores
+        )
+      )$prob.test
+    } else {
+      phat_0 <- .quiet(
+
+        predict(
+
+          model,
+          newdata = BART::bartModelMatrix(X_pred0),
+          mc.cores = cores
+        )
+      )$yhat.test
+    }
 
     for (att_level in att_levels) {
 
@@ -243,8 +257,8 @@ IMCE <- function(data,
                                       levels = levels(X_pred0[[attribs[i]]]))
 
       # Get predictions
-
-      phat_1 <- .quiet(
+      if (type == "choice") {
+        phat_1 <- .quiet(
 
           predict(
 
@@ -252,8 +266,21 @@ IMCE <- function(data,
             newdata = BART::bartModelMatrix(X_pred1),
             mc.cores = cores
 
-            )
-          )$prob.test
+          )
+        )$prob.test
+      } else {
+        phat_1 <- .quiet(
+
+          predict(
+
+            model,
+            newdata = BART::bartModelMatrix(X_pred1),
+            mc.cores = cores
+
+          )
+        )$yhat.test
+      }
+
 
       ## Note, prob.test.mean is equivalent to
       # stats::pnorm(colMeans(pred_0$yhat.test))
@@ -408,7 +435,7 @@ IMCE <- function(data,
 RMCE <- function(imces) {
 
   if (!inherits(imces, "cjbart")) {
-    stop("imce_out must be the result of calling IMCE()")
+    stop("imces must be the result of calling IMCE()")
   }
 
   if (is.null(imces$omce)) {
