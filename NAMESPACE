@@ -3,6 +3,7 @@
 S3method(plot,cjbart)
 S3method(plot,cjbart.vimp)
 S3method(summary,cjbart)
+export(AMCE)
 export(IMCE)
 export(RMCE)
 export(cjbart)

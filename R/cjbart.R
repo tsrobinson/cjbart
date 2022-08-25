@@ -399,3 +399,171 @@ RMCE <- function(imces) {
                                    FUN = mean)
 
 }
+
+#' Average Marginal Component Effect Estimation with credible Interval
+#'
+#' @description \code{AMCE} calculates the average marginal component effects from a BART-estimated conjoint model.
+#' @param data A data.frame, containing all attributes, covariates, the outcome and id variables to analyze.
+#' @param model A model object, the result of running \code{cjbart()}
+#' @param attribs Vector of attribute names for which IMCEs will be predicted
+#' @param ref_levels Vector of reference levels, used to calculate marginal effects
+#' @param method Character string, setting the variance estimation method to use. When method is "parametric", a typical combined variance estimate is employed; when \code{method = "bayes"}, the 95% posterior interval is calculated; and when \code{method = "rubin"}, combination rules are used to combine the variance analogous to in multiple imputation analysis.
+#' @param alpha Number between 0 and 1 -- the significance level used to compute confidence/posterior intervals. When \code{method = "bayes"}, the posterior interval is calculated by taking the alpha/2 and (1-alpha/2) quantiles of the posterior draws. When \code{method = "rubin"}, the confidence interval equals the IMCE +/- \code{qnorm(alpha/2)}. By default, alpha is 0.05 i.e. generating a 95% confidence/posterior interval.
+#' @param cores Number of CPU cores used during prediction phase
+#' @param skip_checks Boolean, indicating whether to check the structure of the data (default = \code{FALSE}). Only set this to \code{TRUE} if you are confident that the data is structured appropriately
+#' @details The AMCE estimates are the average of all computed OMCEs.
+#' @return \code{AMCE} returns an object of type "cjbart", a list object.
+#' \item{amces}{A data.frame containing the average marginal component effects}
+#' \item{alpha}{The significance level used to compute the credible interval}
+#' @seealso [cjbart::cjbart()]
+#' @importFrom stats predict
+#' @example inst/examples/basic_workflow.R
+#' @export
+AMCE <- function(data,
+                 model,
+                 attribs,
+                 ref_levels,
+                 method = "bayes",
+                 alpha = 0.05,
+                 cores = 1,
+                 skip_checks = FALSE) {
+
+  data <- as.data.frame(data)
+
+  # Get variables from trained model
+  Y <- model$Y_col
+  round <- model$round_col
+  id <- model$id_col
+
+  # Check optional args
+  if (method != "bayes") {
+    warning("Only the Bayesian credible interval strategy is available at present. The method argument has been overridden to 'bayes'.")
+  }
+
+  if (!skip_checks) {
+    test_data <- data[,!(names(data) %in% c(attribs, Y, round))]
+
+    if (is.data.frame(test_data)) { # Skip if only one variable left (assume it is id)
+
+      test_data <- test_data[!duplicated(test_data),]
+
+      if(!(id %in% names(test_data))) {
+        stop("Could not find id variable in data")
+      }
+
+      if(nrow(test_data) != length(unique(test_data[[id]]))) {
+        warning("Covariates vary within id: if this is not intentional, please check your data")
+      }
+
+    }
+
+    if (!sum(sapply(attribs, function(x) class(data[[x]])) %in% c("character","factor")) == length(attribs)) {
+
+      stop("Conjoint attribute columns must be character vectors")
+
+    }
+
+    rm(test_data)
+    gc()
+  }
+
+  # Frame to store AMCEs
+  results <- data.frame(attribute = as.character(),
+                        level = as.character(),
+                        AMCE = as.numeric(),
+                        AMCE_lower = as.numeric(),
+                        AMCE_upper = as.numeric())
+
+  # Data frame for predicting outcomes
+  train_vars <- names(data)[!(names(data) %in% c(id,Y))]
+  data_predict <- data[,train_vars]
+
+  # Vector to store attribute names (for future function calls)
+  out_levels <- c()
+
+  for (i in 1:length(attribs)) {
+
+    message("Calculating AMCEs for attribute: ", attribs[i], " [",i,"/",length(attribs),"]")
+
+    att_levels <- unique(data[[attribs[i]]][data[[attribs[i]]] != ref_levels[i]])
+
+    out_levels <- c(out_levels, as.character(att_levels))
+
+    X_pred0 <- data_predict
+
+    X_pred0 <- .char_to_fact(X_pred0)
+
+    X_pred0[[attribs[i]]] <- factor(ref_levels[i],
+                                    levels = levels(X_pred0[[attribs[i]]]))
+
+    phat_0 <- .quiet(
+
+      predict(
+
+        model,
+        newdata = BART::bartModelMatrix(X_pred0),
+        mc.cores = cores
+      )
+    )$prob.test
+
+    for (att_level in att_levels) {
+
+      X_pred1 <- X_pred0
+
+      X_pred1[[attribs[i]]] <- factor(att_level,
+                                      levels = levels(X_pred0[[attribs[i]]]))
+
+      # Get predictions
+      phat_1 <- .quiet(
+
+        predict(
+
+          model,
+          newdata = BART::bartModelMatrix(X_pred1),
+          mc.cores = cores
+
+        )
+      )$prob.test
+
+      # Get OMCE for single attribute-level comparison and store
+      amce_est <- mean(colMeans(phat_1) - colMeans(phat_0))
+
+      if (method == "bayes") {
+
+        # Save interval as vector to make code easier to read.
+        intvl <- c(alpha/2, (1-alpha/2))
+
+        # Calculate distribution of marginal effects
+        var_z <- phat_1 - phat_0
+
+        # Calculate IMCE interval at this point to avoid holding many frames in memory
+        imce_ci <- stats::quantile(var_z, intvl)
+
+        amce_lower <- imce_ci[1]
+        amce_upper  <- imce_ci[2]
+
+        rm(var_z, imce_ci)
+
+      }
+
+      results[nrow(results)+1,] <- list(attribute = attribs[i],
+                                     level = as.character(att_level),
+                                     AMCE = amce_est,
+                                     AMCE_lower = amce_lower,
+                                     AMCE_upper = amce_upper)
+
+      rm(X_pred1, phat_1)
+      gc()
+
+    }
+
+  }
+
+  out_obj <- list(amces = results,
+                  alpha = alpha)
+
+  class(out_obj) <- "cjbart"
+
+  return(out_obj)
+
+}

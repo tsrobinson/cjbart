@@ -12,10 +12,13 @@
 \item{...}{Further arguments (not currently used)}
 }
 \value{
-Data frame summarizing the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
+Data frame summarizing the average marginal component effect (AMCE), the minimum and maximum values, and standard deviations for each attribute-level.
 }
 \description{
 \code{summary} method for class "cjbart"
+}
+\note{
+To calculate the AMCE with Bayesian credible intervals, please use the \code{AMCE()} function instead.
 }
 \examples{
 subjects <- 5
@@ -47,4 +50,7 @@ if (.Platform$OS.type=='unix') {
 }
 
 
+}
+\seealso{
+\code{\link[=AMCE]{AMCE()}}
 }

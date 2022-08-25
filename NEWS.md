@@ -1,7 +1,8 @@
 # cjbart 0.3.0
 
-* Add option to drop attributes from IMCE analysis
+* Add ability to drop attributes from IMCE analysis
 * Add new pIMCE() function to calculate population-weighted IMCEs
+* Add new AMCE() function that includes Bayesian uncertainty estimate
 
 # cjbart 0.2.2
 
