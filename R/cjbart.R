@@ -50,11 +50,11 @@ cjbart <- function(data, Y, type = NULL, id = NULL, round = NULL, use_round = TR
   train_Y <- data[[Y]]
 
   if (!missing(type)) {
-    if !(type %in% c("choice","rating")) {
+    if (!(type %in% c("choice","rating"))) {
       stop("Invalid type argument: must be 'choice' (forced-choice outcomes) or 'rating' (interval ratings outcomes), or NULL.")
     }
   } else {
-    if setequal(unique(train_Y),c(0,1)) {
+    if (setequal(unique(train_Y),c(0,1))) {
       type = "choice"
       message("Detected force-choiced outcome")
     } else {
