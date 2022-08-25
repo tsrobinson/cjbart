@@ -35,6 +35,7 @@ pIMCE <- function(model,
   Y <- model$Y_col
   round <- model$round_col
   id_var <- model$id_col
+  type <- model$type
 
   # Check optional args
   if (!(method %in% c("average","bayes","rubin"))) {
@@ -100,11 +101,19 @@ pIMCE <- function(model,
 
       pred_data[[l]] <- factor(l_d, levels = model$factor_levels[[l]])
 
-      phats[[l_d]] <- .quiet(predict(
-        model,
-        newdata = BART::bartModelMatrix(pred_data)[,names(model$varcount.mean)],
-        mc.cores = cores
-      )$prob.test)
+      if (type == "choice") {
+        phats[[l_d]] <- .quiet(predict(
+          model,
+          newdata = BART::bartModelMatrix(pred_data)[,names(model$varcount.mean)],
+          mc.cores = cores
+        )$prob.test)
+      } else {
+        phats[[l_d]] <- .quiet(predict(
+          model,
+          newdata = BART::bartModelMatrix(pred_data)[,names(model$varcount.mean)],
+          mc.cores = cores
+        )$yhat.test)
+      }
     }
 
     omce_mat <- phats[[l_1]] - phats[[l_0]]
