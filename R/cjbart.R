@@ -246,7 +246,7 @@ IMCE <- function(data,
           newdata = BART::bartModelMatrix(X_pred0),
           mc.cores = cores
         )
-      )$yhat.test
+      )
     }
 
     for (att_level in att_levels) {
@@ -278,7 +278,7 @@ IMCE <- function(data,
             mc.cores = cores
 
           )
-        )$yhat.test
+        )
       }
 
 
