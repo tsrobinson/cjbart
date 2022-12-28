@@ -32,6 +32,7 @@ Suggests:
     testthat,
     knitr,
     cregg,
+    parallel,
     rmarkdown
 VignetteBuilder: knitr
 URL: https://github.com/tsrobinson/cjbart
