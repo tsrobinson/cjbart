@@ -1,8 +1,8 @@
 ---
-title: "Heterogeneous effects analysis of conjoint experiments"
+title: "Introduction to heterogeneous effects analysis of conjoint experiments using **cjbart**"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Heterogeneous effects analysis of conjoint experiments}
+  %\VignetteIndexEntry{Introduction to cjbart}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -96,7 +96,7 @@ We can estimate the importance of covariates to the model using the `het_vimp()`
 
 
 ```{r plot_vimp1}
-vimp_estimates <- het_vimp(het_effects, cores = 1)
+vimp_estimates <- het_vimp(imces = het_effects, cores = 1)
 plot(vimp_estimates)
 ```
 
@@ -104,4 +104,29 @@ Supplying a single attribute-level, the same plot function will display the impo
 
 ```{r plot_vimp2}
 plot(vimp_estimates, att_levels = "d3")
+```
+
+Finally, it is possible to estimate population IMCEs (pIMCEs) using `pIMCE()` This function requires a list of the marginal probabilities for each attribute in the population of interest, and can only be estimated for one attribute-level comparison at a time (due to the computational requirements):
+
+```{r pimces}
+fake_marginals <- list()
+fake_marginals[["A"]] <- c("a1" = 0.33,"a2" = 0.33,"a3"=0.34)
+fake_marginals[["B"]] <- c("b1" = 0.33,"b2" = 0.33,"b3" = 0.34)
+fake_marginals[["C"]] <- c("c1" = 0.33,"c2" = 0.33, "c3" = 0.34)
+fake_marginals[["D"]] <- c("d1" = 0.75,"d2" = 0.2,"d3" = 0.05)
+fake_marginals[["E"]] <- c("e1" = 0.33,"e2" = 0.33,"e3" = 0.34)
+
+# Reduced number of covariate data for sake of speed
+fake_pimces <- pIMCE(covar_data = fake_data[fake_data$id1 %in% 1:3,
+                                            c("id1","covar1","covar2")],
+                     model = cj_model,
+                     attribs = c("A","B","C","D","E"),
+                     l = "E",
+                     l_1 = "e2",
+                     l_0 = "e1",
+                     marginals = fake_marginals,
+                     method = "bayes",
+                     cores = 1)
+
+head(fake_pimces)
 ```

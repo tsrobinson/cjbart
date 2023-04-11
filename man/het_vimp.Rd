@@ -4,7 +4,7 @@
 \alias{het_vimp}
 \title{Estimate Variable Importance Metrics for \code{cjbart} Object}
 \usage{
-het_vimp(imces, levels = NULL, covars = NULL, cores = 1)
+het_vimp(imces, levels = NULL, covars = NULL, cores = 1, ...)
 }
 \arguments{
 \item{imces}{Object of class \code{cjbart}, the result of running \code{\link[=IMCE]{IMCE()}}}
@@ -14,6 +14,8 @@ het_vimp(imces, levels = NULL, covars = NULL, cores = 1)
 \item{covars}{An optional vector of covariates to include in the importance metric check. By default, all covariates are included in each importance model.}
 
 \item{cores}{Number of CPU cores used during VIMP estimation. Each extra core will result in greater memory consumption. Assigning more cores than outcomes will not further boost performance.}
+
+\item{...}{Extra arguments (used to check for deprecated argument names)}
 }
 \value{
 A "long" data.frame of variable importance scores for each combination of covariates and attribute-levels, as well as the estimated 95\% confidence intervals for each metric.

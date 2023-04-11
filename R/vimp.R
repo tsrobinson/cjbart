@@ -4,6 +4,7 @@
 #' @param levels An optional vector of attribute-levels to generate importance metrics for. By default, all attribute-levels are analyzed.
 #' @param covars An optional vector of covariates to include in the importance metric check. By default, all covariates are included in each importance model.
 #' @param cores Number of CPU cores used during VIMP estimation. Each extra core will result in greater memory consumption. Assigning more cores than outcomes will not further boost performance.
+#' @param ... Extra arguments (used to check for deprecated argument names)
 #' @return A "long" data.frame of variable importance scores for each combination of covariates and attribute-levels, as well as the estimated 95% confidence intervals for each metric.
 #' @details Having generated a schedule of individual-level marginal component effect estimates, this function fits a random forest model for each attribute-level using the supplied covariates as predictors. It then calculates a variable importance measure (VIMP) for each covariate. The VIMP method assesses how important each covariate is in terms of partitioning the predicted individual-level effects distribution, and can thus be used as an indicator of which variables drive heterogeneity in the IMCEs.
 #'
@@ -14,10 +15,20 @@
 #' @seealso [randomForestSRC::rfsrc()] and [randomForestSRC::subsample()]
 #' @importFrom Rdpack reprompt
 #' @export
-het_vimp <- function(imces, levels = NULL, covars = NULL, cores = 1) {
+het_vimp <- function(imces, levels = NULL, covars = NULL, cores = 1, ...) {
 
   if (is.null(levels)) {
     levels <- imces$att_levels
+  }
+
+  extra_args = names(list(...))
+  deprecated_args = c("model","outcomes")
+  deprec_present <- deprecated_args[deprecated_args %in% extra_args]
+
+  if (length(deprec_present) > 0) {
+    warning("\nDetected deprecated argument names!\n The following argument names were changed in cjbart v0.3:",
+            "\n * `model` (old) -> 'imces' (new) \n * `outcomes` -> `levels`",
+            "\n Please check any output and update your scripts accordingly.")
   }
 
   if (cores == 1 | .Platform$OS.type != "unix") {
