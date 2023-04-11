@@ -17,7 +17,7 @@ Description: A tool for analyzing conjoint experiments using Bayesian Additive R
 License: Apache License (>= 2.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Depends:
     R (>= 3.6.0),
     BART
@@ -31,7 +31,6 @@ Imports:
 Suggests: 
     testthat,
     knitr,
-    cregg,
     parallel,
     rmarkdown
 VignetteBuilder: knitr

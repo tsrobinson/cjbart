@@ -2,7 +2,7 @@
 % Please edit documentation in R/cjbart.R
 \name{AMCE}
 \alias{AMCE}
-\title{Average Marginal Component Effect Estimation with credible Interval}
+\title{Average Marginal Component Effect Estimation with Credible Interval}
 \usage{
 AMCE(
   data,

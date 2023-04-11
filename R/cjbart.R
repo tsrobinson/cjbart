@@ -56,7 +56,7 @@ cjbart <- function(data, Y, type = NULL, id = NULL, round = NULL, use_round = TR
   } else {
     if (setequal(unique(train_Y),c(0,1))) {
       type = "choice"
-      message("Detected force-choiced outcome")
+      message("Detected forced-choice outcome")
     } else {
       type = "rating"
       message("Detected interval (rating) outcome")
@@ -150,6 +150,7 @@ IMCE <- function(data,
   Y <- model$Y_col
   round <- model$round_col
   id <- model$id_col
+  unq_ids <- unique(data[[id]])
   type <- model$type
 
   # Check optional args
@@ -185,6 +186,37 @@ IMCE <- function(data,
     gc()
   }
 
+  # Check attribute-level unique and rename if needed
+  att_lev_list <- lapply(attribs, function (x) data.frame(Attribute = x, level = unique(data[[x]])))
+  att_lookup <- do.call("rbind", att_lev_list)
+
+  if (length(unique(att_lookup$level)) < nrow(att_lookup)) {
+
+    ref_levels <- paste0("<",attribs,">_", ref_levels)
+    for (att in attribs) {
+      data[[att]] <- paste0("<",att,">_", data[[att]])
+    }
+
+    warning("Found duplicate level names across attributes: ",
+            "[",unique(att_lookup$level[duplicated(att_lookup$level)]),"].",
+            "\n*All* levels in data will be renamed to format <attribute>_level, ",
+            "e.g. ", ref_levels[1],
+            "\n You can use the `att_lookup` table in the return object to compare new and old names")
+
+    for (i in 1:length(attribs)) {
+      if (!(ref_levels[i] %in% data[[attribs[i]]])) {
+        stop("Failed to re-label data. Try manually converting conjoint data so all attribute-level names are unique.")
+      }
+    }
+
+    att_lev_list <- lapply(attribs, function (x) data.frame(Attribute = x, level = unique(data[[x]])))
+    att_lookup <- do.call("rbind", att_lev_list)
+  }
+
+  # Add label to lookup (does nothing if no duplicates)
+  att_lookup$Level <- sub("<.*>_", "", att_lookup$level)
+
+
   # Frame to store OMCEs
   results <- data[,!(names(data) %in% c(attribs, Y))]
 
@@ -202,7 +234,7 @@ IMCE <- function(data,
 
   # Variance and interval frames
   var_omce <- data.frame(row.names = 1:nrow(data))
-  imce_lower <- imce_upper <- data.frame(row.names = 1:length(unique(data[[id]])))
+  imce_lower <- imce_upper <- data.frame(row.names = 1:length(unq_ids))
 
   # Data frame for predicting outcomes
   train_vars <- names(data)[!(names(data) %in% c(id,Y))]
@@ -298,16 +330,10 @@ IMCE <- function(data,
         var_z <- phat_1 - phat_0
 
         # Calculate IMCE interval at this point to avoid holding many frames in memory
-        imce_ci <- sapply(
-
-          unique(data[[id]]), function(s) stats::quantile(var_z[,data[[id]] == s], intvl)
-
-        )
+        imce_ci <- sapply(unq_ids, function(s) stats::quantile(var_z[,data[[id]] == s], intvl))
 
         imce_lower[[as.character(att_level)]] <- imce_ci[1,]
         imce_upper[[as.character(att_level)]] <- imce_ci[2,]
-
-        imce_lower[["id"]] <- imce_upper[["id"]] <- colnames(imce_ci)
 
         rm(var_z, imce_ci)
 
@@ -356,7 +382,15 @@ IMCE <- function(data,
 
   results_imce <- merge(results_imce, covars, by = id)
 
-  if (method == "rubin") {
+  if (method == "bayes") {
+
+    # Note bounds are calculated above to prevent having to OMCE draws
+    imce_upper <- as.data.frame(imce_upper)
+    imce_lower <- as.data.frame(imce_lower)
+
+    imce_lower[[id]] <- imce_upper[[id]] <- unq_ids
+
+  } else if (method == "rubin") {
 
     results_var <- sapply(colnames(var_omce), function (x) {
       sapply(results_imce[[id]], function (y) {
@@ -370,9 +404,10 @@ IMCE <- function(data,
     imce_upper <- sapply(colnames(results_var), function (x) results_imce[[x]] + stats::qnorm(1-(alpha/2))*results_var[,x])
     imce_lower <- sapply(colnames(results_var), function (x) results_imce[[x]] + stats::qnorm(alpha/2)*results_var[,x])
 
-    imce_lower <- cbind(imce_lower, id = results_imce[[id]])
-    imce_upper <- cbind(imce_upper, id = results_imce[[id]])
+    imce_upper <- as.data.frame(imce_upper)
+    imce_lower <- as.data.frame(imce_lower)
 
+    imce_lower[[id]] <- imce_upper[[id]] <- results_imce[[id]]
 
   } else if (method == "average") {
 
@@ -387,17 +422,19 @@ IMCE <- function(data,
     imce_upper <- sapply(colnames(results_var), function (x) results_imce[[x]] + stats::qnorm(1-(alpha/2))*sqrt(results_var[,x]))
     imce_lower <- sapply(colnames(results_var), function (x) results_imce[[x]] + stats::qnorm(alpha/2)*sqrt(results_var[,x]))
 
-    imce_lower <- cbind(imce_lower, id = results_imce[[id]])
-    imce_upper <- cbind(imce_upper, id = results_imce[[id]])
+    imce_upper <- as.data.frame(imce_upper)
+    imce_lower <- as.data.frame(imce_lower)
 
+    imce_lower[[id]] <- imce_upper[[id]] <- results_imce[[id]]
   }
 
   out_obj <- list(imce = results_imce,
-                  imce_lower = as.data.frame(imce_lower),
-                  imce_upper = as.data.frame(imce_upper),
+                  imce_lower = imce_lower,
+                  imce_upper = imce_upper,
                   alpha = alpha,
                   att_levels = out_levels,
                   id = id,
+                  att_lookup = att_lookup,
                   omce = NULL,
                   imce_var = NULL,
                   round = NULL)
@@ -426,7 +463,7 @@ IMCE <- function(data,
 #' Inspect Round-Level Marginal Component Effect (RMCE)
 #'
 #' @description \code{RMCE} calculates the round-level marginal component effects from a cjbart model.
-#' @param imces An object of class "cjbart", the result of calling the \code{IMCE} function
+#' @param imces An object of class "cjbart", the result of calling the \code{cjbart::IMCE()} function
 #' @details The RMCE estimates are the result of averaging the OMCEs within each round, for each subject in the experiment.
 #' The RMCE is the intermediate causal quantity between OMCEs and IMCEs, and can be useful for inspecting whether there are any carryover or stability issues across rounds.
 #' @return \code{IMCE} returns a data frame of RMCEs.
@@ -457,7 +494,7 @@ RMCE <- function(imces) {
 
 }
 
-#' Average Marginal Component Effect Estimation with credible Interval
+#' Average Marginal Component Effect Estimation with Credible Interval
 #'
 #' @description \code{AMCE} calculates the average marginal component effects from a BART-estimated conjoint model.
 #' @param data A data.frame, containing all attributes, covariates, the outcome and id variables to analyze.

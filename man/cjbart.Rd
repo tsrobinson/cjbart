@@ -4,12 +4,23 @@
 \alias{cjbart}
 \title{Generate Conjoint Model Using BART}
 \usage{
-cjbart(data, Y, id = NULL, round = NULL, use_round = TRUE, cores = 1, ...)
+cjbart(
+  data,
+  Y,
+  type = NULL,
+  id = NULL,
+  round = NULL,
+  use_round = TRUE,
+  cores = 1,
+  ...
+)
 }
 \arguments{
 \item{data}{A data.frame, containing all attributes, controls, the outcome and id variables to analyze.}
 
 \item{Y}{Character string -- the outcome variable}
+
+\item{type}{Type of conjoint experiment -- either "choice" (for forced-choice outcomes) or "rating" (for interval ratings). If NULL (default), the function will attempt to automatically detect the outcome type.}
 
 \item{id}{Character string -- variable identifying individual respondents (optional)}
 
