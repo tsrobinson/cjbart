@@ -121,7 +121,6 @@ plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
 #' @return Data frame summarizing the average marginal component effect (AMCE), the minimum and maximum values, and standard deviations for each attribute-level.
 #' @note To calculate the AMCE with Bayesian credible intervals, please use the \code{AMCE()} function instead.
 #' @method summary cjbart
-#' @example inst/examples/basic_workflow.R
 #' @seealso [cjbart::AMCE()]
 #' @export
 summary.cjbart <- function(object, ...) {

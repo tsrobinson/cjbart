@@ -511,7 +511,6 @@ RMCE <- function(imces) {
 #' \item{alpha}{The significance level used to compute the credible interval}
 #' @seealso [cjbart::cjbart()]
 #' @importFrom stats predict
-#' @example inst/examples/basic_workflow.R
 #' @export
 AMCE <- function(data,
                  model,
