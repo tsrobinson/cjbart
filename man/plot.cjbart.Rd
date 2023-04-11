@@ -11,7 +11,7 @@
 
 \item{covar}{Character string detailing the covariate over which to analyze heterogeneous effects}
 
-\item{plot_levels}{Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.}
+\item{plot_levels}{Optional vector of conjoint attribute levels to plot. If not supplied, all attributes within the conjoint model will be plotted.}
 
 \item{se}{Boolean determining whether to show an estimated 95\% confidence interval}
 

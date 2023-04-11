@@ -2,7 +2,7 @@
 #' @description Plots observation-level or individual-level marginal component effects (OMCE and IMCE respectively). By default, all attribute-levels in the model are plotted.
 #' @param x Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
 #' @param covar Character string detailing the covariate over which to analyze heterogeneous effects
-#' @param plot_levels Optional vector of conjoint attribute names to plot. If not supplied, all attributes within the conjoint model will be plotted.
+#' @param plot_levels Optional vector of conjoint attribute levels to plot. If not supplied, all attributes within the conjoint model will be plotted.
 #' @param se Boolean determining whether to show an estimated 95% confidence interval
 #' @param ... Additional arguments for plotting the marginal component effects (see below).
 #' @return Plot of marginal component effects.
@@ -11,34 +11,45 @@
 #' @export
 plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
 
-  data <- x$imce
+  exp_data <- x$imce
 
   plot_data <- tidyr::pivot_longer(cols = x$att_levels,
-                                   names_to = "att",
+                                   names_to = "level",
                                    values_to = "imce",
-                                   data = data)
+                                   data = exp_data)
+
+  plot_data <- merge(x = plot_data, y = x$att_lookup,
+                     all.x = TRUE,
+                     by = "level")
 
   if (se) {
 
     ci_lower <- tidyr::pivot_longer(cols = x$att_levels,
-                                    names_to = "att",
+                                    names_to = "level",
                                     values_to = "imce_lower",
                                     data = x$imce_lower)
 
     ci_upper <- tidyr::pivot_longer(cols = x$att_levels,
-                                    names_to = "att",
+                                    names_to = "level",
                                     values_to = "imce_upper",
                                     data = x$imce_upper)
 
-    plot_data <- cbind(plot_data, imce_lower = ci_lower$imce_lower, imce_upper =  ci_upper$imce_upper)
+    plot_data <- merge(x = plot_data,
+                       y = ci_lower[,c(x$id,"level","imce_lower")],
+                       all.x = TRUE,
+                       by = c("level",x$id))
 
+    plot_data <- merge(x = plot_data,
+                       y = ci_upper[,c(x$id,"level","imce_upper")],
+                       all.x = TRUE,
+                       by = c("level",x$id))
   }
 
   if (!is.null(plot_levels)) {
-    plot_data <- plot_data[plot_data$att %in% plot_levels,]
+    plot_data <- plot_data[plot_data$level %in% plot_levels,]
 
     if (nrow(plot_data) == 0) {
-      stop("Filtering attribute levels renders data with no observations -- please check plot_levels argument.")
+      stop("Failed to find attribute plot_levels in data. This may be because the conjoint has multiple attributes with the same level.\n If this is the case, try specifying the required levels as '<attribute>_level', e.g., '<age>_80+'.")
     }
 
   }
@@ -49,7 +60,7 @@ plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
 
     by(
       plot_data,
-      INDICES = plot_data$att,
+      INDICES = plot_data$level,
       FUN = function(x) {
         x_ordered <- x[order(x$imce),]
         x_ordered$x_order <- 1:nrow(x_ordered)
@@ -57,6 +68,8 @@ plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
         }
      )
   )
+
+  plot_data$facet_labels <- paste0("atop(italic('",plot_data$Attribute,":'),bold('",plot_data$Level,"'))")
 
   base_plot <- ggplot2::ggplot(plot_data,
                                  ggplot2::aes_string(x = "x_order",
@@ -67,7 +80,7 @@ plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
     {if (!is.null(covar)) {ggplot2::aes_string(color = covar)}} +
     {if (se) {ggplot2::geom_ribbon(ggplot2::aes_string(ymin = "imce_lower", ymax = "imce_upper"), color = NA, fill = "grey60", alpha = 0.7)}} +
 
-    ggplot2::facet_wrap(~.data$att, scales = "free") +
+    ggplot2::facet_wrap(~.data$facet_labels, scales = "free", labeller = "label_parsed") +
     ggplot2::geom_point(alpha = 0.8) +
     ggplot2::ylab("IMCE") +
     ggplot2::xlab("Individual") +
@@ -80,7 +93,7 @@ plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
     if (typeof(plot_data[[covar]]) == "double") {
 
       base_plot <- base_plot +
-        ggplot2::scale_color_gradient(low = "dodgerblue3", high = "goldenrod1")
+        ggplot2::scale_color_gradient(low = "#0072B2", high = "#E69F00")
 
     } else {
 
@@ -105,9 +118,10 @@ plot.cjbart <- function(x, covar = NULL, plot_levels = NULL, se = TRUE,  ...) {
 #' @description \code{summary} method for class "cjbart"
 #' @param object Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
 #' @param ... Further arguments (not currently used)
-#' @return Data frame summarizing the average marginal component effect, the minimum and maximum values, and standard deviations for each attribute-level.
+#' @return Data frame summarizing the average marginal component effect (AMCE), the minimum and maximum values, and standard deviations for each attribute-level.
+#' @note To calculate the AMCE with Bayesian credible intervals, please use the \code{AMCE()} function instead.
 #' @method summary cjbart
-#' @example inst/examples/basic_workflow.R
+#' @seealso [cjbart::AMCE()]
 #' @export
 summary.cjbart <- function(object, ...) {
 
@@ -119,19 +133,23 @@ summary.cjbart <- function(object, ...) {
   maxs <- apply(IMCE_only,2,max)
   sds <- apply(IMCE_only,2,stats::sd)
 
-  att_names <-  ifelse(test = nchar(object$att_levels) > 30,
-                       yes = paste0(substr(object$att_levels,1,30),"..."),
-                       no = object$att_levels)
-
-  summary_tab <- data.frame(Level = att_names,
+  summary_tab <- data.frame(level = object$att_levels,
                             AMCE = AMCE,
                             `Min.` = mins,
                             `Max.` = maxs,
                             `Std.Dev` = sds,
                             row.names = NULL)
 
-  message("Summary table of individual marginal component effects (IMCEs)")
-  print(summary_tab)
+  summary_tab <- merge(x = object$att_lookup,
+                       y = summary_tab,
+                       all.y = TRUE,
+                       by = "level")
+
+  summary_tab$level <- NULL
+
+  message("Individual marginal component effects (IMCEs)")
+  summary_tab <- tidyr::tibble(summary_tab)
+  return(summary_tab)
 
 }
 
@@ -146,7 +164,7 @@ summary.cjbart <- function(object, ...) {
 #' @export
 plot.cjbart.vimp <- function(x, covars = NULL, att_levels = NULL,  ...) {
 
-  plot_data <- x
+  plot_data <- x$results
 
   if (!is.null(covars)) {
 
@@ -156,7 +174,12 @@ plot.cjbart.vimp <- function(x, covars = NULL, att_levels = NULL,  ...) {
 
   if (!is.null(att_levels)) {
 
-    plot_data <- plot_data[plot_data$outcome %in% att_levels,]
+    plot_data <- merge(x = plot_data,
+                       y = x$att_lookup,
+                       by = c("Attribute","Level"),
+                       all.x = TRUE)
+
+    plot_data <- plot_data[plot_data$level %in% att_levels,]
 
   }
 
@@ -164,11 +187,11 @@ plot.cjbart.vimp <- function(x, covars = NULL, att_levels = NULL,  ...) {
 
     ggplot2::ggplot(plot_data,
                     ggplot2::aes_string(x = "covar",
-                                        y = "outcome",
+                                        y = "Level",
                                         fill = "importance")) +
-      ggplot2::facet_grid(attribute ~ ., space = "free", scales = "free", switch = "y") +
+      ggplot2::facet_grid(Attribute ~ ., space = "free", scales = "free") +
       ggplot2::geom_tile() +
-      ggplot2::scale_fill_gradient(low="white", high="firebrick2") +
+      ggplot2::scale_fill_gradient(low="white", high="firebrick1") +
       ggplot2::labs(x = "Covariates", y = "Attribute-level", fill = "Importance") +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle=45, vjust = 1, hjust = 1)) +
       ggplot2::theme_classic()
@@ -187,6 +210,7 @@ plot.cjbart.vimp <- function(x, covars = NULL, att_levels = NULL,  ...) {
       ggplot2::labs(x = "Standardised Importance",
                     y = "Covariates") +
       ggplot2::xlim(min(plot_data$lower2.5)-1, max(plot_data$upper97.5)+1) +
+      ggplot2::labs(title = paste0(unique(plot_data$Attribute),": ", unique(plot_data$Level))) +
       ggplot2::theme_classic()
 
   }

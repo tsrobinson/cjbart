@@ -7,7 +7,7 @@
 RMCE(imces)
 }
 \arguments{
-\item{imces}{An object of class "cjbart", the result of calling the \code{IMCE} function}
+\item{imces}{An object of class "cjbart", the result of calling the \code{cjbart::IMCE()} function}
 }
 \value{
 \code{IMCE} returns a data frame of RMCEs.

@@ -5,24 +5,24 @@
 \title{Population-Weighted Heterogeneous Effects Analysis of Conjoint Results}
 \usage{
 pIMCE(
-  data,
   model,
+  covar_data,
   attribs,
   l,
   l_1,
   l_0,
-  covars,
   marginals,
   method = "bayes",
   alpha = 0.05,
   cores = 1,
-  skip_checks = FALSE
+  skip_checks = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{data}{A data.frame, containing all attributes, covariates, the outcome and id variables to analyze.}
-
 \item{model}{A model object, the result of running \code{cjbart()}}
+
+\item{covar_data}{A data.frame of covariate information to predict pIMCEs over}
 
 \item{attribs}{Vector of attribute names}
 
@@ -31,8 +31,6 @@ pIMCE(
 \item{l_1}{Attribute-level of interest for attribute \emph{l}}
 
 \item{l_0}{Reference level for attribute \emph{l}}
-
-\item{covars}{A data.frame of covariate information to predict pIMCEs over}
 
 \item{marginals}{A named list where every element is a named vector of marginal probabilities for each corresponding attribute-level.  For example, \code{marginals = list("A1" = c("q" = 0.4, "r" = 0.6), "A2" = c("x" = 0.7, "y" = 0.2, "z" = 0.1))}}
 
@@ -43,6 +41,8 @@ pIMCE(
 \item{cores}{Number of CPU cores used during prediction phase}
 
 \item{skip_checks}{Boolean, indicating whether to check the structure of the data (default = \code{FALSE}). Only set this to \code{TRUE} if you are confident that the data is structured appropriately}
+
+\item{verbose}{Boolean, indicating whether to print progress (default = TRUE)}
 }
 \value{
 \code{pIMCE} returns a data.frame of population-weighted estimates, credible interval bounds, and the covariate information supplied

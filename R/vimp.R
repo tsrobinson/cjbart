@@ -1,8 +1,10 @@
 #' Estimate Variable Importance Metrics for \code{cjbart} Object
 #' @description Estimates random forest variable importance scores for multiple attribute-levels of a conjoint experiment.
-#' @param model Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
-#' @param outcomes An optional vector of attribute levels to generate importance metrics for. By default, all attribute-levels are analyzed.
+#' @param imces Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
+#' @param levels An optional vector of attribute-levels to generate importance metrics for. By default, all attribute-levels are analyzed.
 #' @param covars An optional vector of covariates to include in the importance metric check. By default, all covariates are included in each importance model.
+#' @param cores Number of CPU cores used during VIMP estimation. Each extra core will result in greater memory consumption. Assigning more cores than outcomes will not further boost performance.
+#' @param ... Extra arguments (used to check for deprecated argument names)
 #' @return A "long" data.frame of variable importance scores for each combination of covariates and attribute-levels, as well as the estimated 95% confidence intervals for each metric.
 #' @details Having generated a schedule of individual-level marginal component effect estimates, this function fits a random forest model for each attribute-level using the supplied covariates as predictors. It then calculates a variable importance measure (VIMP) for each covariate. The VIMP method assesses how important each covariate is in terms of partitioning the predicted individual-level effects distribution, and can thus be used as an indicator of which variables drive heterogeneity in the IMCEs.
 #'
@@ -13,21 +15,53 @@
 #' @seealso [randomForestSRC::rfsrc()] and [randomForestSRC::subsample()]
 #' @importFrom Rdpack reprompt
 #' @export
-het_vimp <- function(model, outcomes = NULL, covars = NULL) {
+het_vimp <- function(imces, levels = NULL, covars = NULL, cores = 1, ...) {
 
-  if (is.null(outcomes)) {
-    outcomes <- model$att_levels
+  if (is.null(levels)) {
+    levels <- imces$att_levels
   }
 
-  vimps <- lapply(outcomes,
-                  function (x) rf_vimp(model = model, outcome = x, covars = covars))
+  extra_args = names(list(...))
+  deprecated_args = c("model","outcomes")
+  deprec_present <- deprecated_args[deprecated_args %in% extra_args]
 
-  full_results <- do.call("rbind", vimps) # %>%
-    # left_join(att_lookup, by = c("outcome" = "att_level"))
+  if (length(deprec_present) > 0) {
+    warning("\nDetected deprecated argument names!\n The following argument names were changed in cjbart v0.3:",
+            "\n * `model` (old) -> 'imces' (new) \n * `outcomes` -> `levels`",
+            "\n Please check any output and update your scripts accordingly.")
+  }
 
-  class(full_results) <- c("cjbart.vimp","data.frame")
+  if (cores == 1 | .Platform$OS.type != "unix") {
 
-  return(full_results)
+    if (cores > 1) {
+      warning("Parallelization is not available on your operating system. Reverting to single-core computation.")
+    }
+
+    vimps <- lapply(levels,
+                    function (x) rf_vimp(model = imces, outcome = x, covars = covars))
+  } else {
+
+    vimps <- parallel::mclapply(levels,
+                      function (x) rf_vimp(model = imces, outcome = x, covars = covars),
+                      mc.cores = cores)
+
+  }
+
+  full_results <- do.call("rbind", vimps)
+
+  full_results <- merge(x = imces$att_lookup,
+                        y = full_results,
+                        all.y = TRUE,
+                        by.x = "level", by.y = "outcome")
+
+  full_results$level <- NULL
+
+  out_obj <- list(results = full_results,
+                  att_lookup = imces$att_lookup)
+
+  class(out_obj) <- c("cjbart.vimp")
+
+  return(out_obj)
 }
 
 #' Estimate a Single Variable Importance Metric for \code{cjbart} Object
