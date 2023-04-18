@@ -546,7 +546,7 @@ AMCE <- function(data,
       }
 
       if(nrow(test_data) != length(unique(test_data[[id]]))) {
-        warning("Covariates vary within id: if this is not intentional, please check your data")
+        warning("Covariates vary within id: if this is not intentional, please check your data\n")
       }
 
     }
