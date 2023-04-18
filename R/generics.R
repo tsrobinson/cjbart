@@ -155,7 +155,7 @@ summary.cjbart <- function(object, ...) {
 
 #' Plot Variable Importance Matrix for Heterogeneity Analysis
 #' @description Plots a heatmap of variable importance, across predicted IMCEs. By default, all attribute-levels and covariates in the model are plotted.
-#' @param x Object of class \code{cjbart}, the result of running [cjbart::IMCE()]
+#' @param x Object of class \code{cjbart.vimp}, the result of running [cjbart::het_vimp()]
 #' @param covars Optional vector of covariate names to plot. By default, all included covariates are shown.
 #' @param att_levels Optional vector of attribute-levels to plot. By default, all attribute-levels are shown.
 #' @param ... Additional arguments (not currently used)
