@@ -7,7 +7,7 @@
 \method{plot}{cjbart.vimp}(x, covars = NULL, att_levels = NULL, ...)
 }
 \arguments{
-\item{x}{Object of class \code{cjbart}, the result of running \code{\link[=IMCE]{IMCE()}}}
+\item{x}{Object of class \code{cjbart.vimp}, the result of running \code{\link[=het_vimp]{het_vimp()}}}
 
 \item{covars}{Optional vector of covariate names to plot. By default, all included covariates are shown.}
 

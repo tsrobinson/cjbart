@@ -1,3 +1,9 @@
+# cjbart 0.3.1
+
+* Fix documentation: to plot the variable importance grid, the `x` argument takes the result of calling `het_vimp()` and not `IMCE()` as previously documented (in v0.3.0)
+
+* Update package dependencies
+
 # cjbart 0.3.0
 
 * Rename arguments in `het_vimp()` from `model` to `imces` and `outcomes` to `levels` for consistency across functions

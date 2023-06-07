@@ -100,7 +100,7 @@ rf_vimp <- function(model, outcome, covars = NULL) {
 
   message(paste0("Calculating importance metrics for attribute-level: ",outcome))
   rf_mod <- randomForestSRC::rfsrc(outcome ~ ., data = trial_data, importance = "permute")
-  vimp_ci <- randomForestSRC::extract.subsample(randomForestSRC::subsample(rf_mod))$ci.jk.Z
+  vimp_ci <- randomForestSRC::extract.subsample(randomForestSRC::subsample(rf_mod), raw = TRUE)$ci.jk.Z
 
   att_results <- data.frame(outcome = outcome,
                             covar = colnames(vimp_ci),
