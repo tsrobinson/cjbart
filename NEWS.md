@@ -1,3 +1,9 @@
+# cjbart 0.3.2
+
+* Update documentation: correct details line for `cjbart()`.
+* Add compatibility so passing seed argument on Windows returns warning rather than error
+* Add unit tests for OS compatibility
+
 # cjbart 0.3.1
 
 * Fix documentation: to plot the variable importance grid, the `x` argument takes the result of calling `het_vimp()` and not `IMCE()` as previously documented (in v0.3.0)

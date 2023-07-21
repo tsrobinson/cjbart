@@ -30,16 +30,16 @@ cjbart(
 
 \item{cores}{Integer -- number of CPU cores used in model training}
 
-\item{...}{Other arguments passed to \code{\link[BART:pbart]{BART::pbart()}}}
+\item{...}{Other arguments passed to \code{\link[BART:mc.pbart]{BART::mc.pbart()}} if on a Unix-based system}
 }
 \value{
 A trained \code{\link[BART:pbart]{BART::pbart()}} model that can be passed to \code{\link[=IMCE]{IMCE()}}
 }
 \description{
-A wrapper for the \code{\link[BART:pbart]{BART::pbart()}} function.
+A wrapper for the \code{\link[BART:pbart]{BART::pbart()}} function used for estimating heterogeneity in conjoint models
 }
 \details{
-Please note, \code{cjbart} currently only works for a binary outcome.
+Please note, Windows users cannot use the parallelized \code{\link[BART:mc.pbart]{BART::mc.pbart()}} function, and so setting an internal seed will not be used.
 }
 \examples{
 subjects <- 5
