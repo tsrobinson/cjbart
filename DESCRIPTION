@@ -1,6 +1,6 @@
 Package: cjbart
 Title: Heterogeneous Effects Analysis of Conjoint Experiments
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: c(
     person(given = "Thomas",
            family = "Robinson",
@@ -29,7 +29,7 @@ Imports:
     randomForestSRC (>= 3.2.2),
     Rdpack
 Suggests: 
-    testthat,
+    testthat (>= 3.0.0),
     knitr,
     parallel,
     rmarkdown
@@ -37,3 +37,4 @@ VignetteBuilder: knitr
 URL: https://github.com/tsrobinson/cjbart
 BugReports: https://github.com/tsrobinson/cjbart/issues
 RdMacros: Rdpack
+Config/testthat/edition: 3

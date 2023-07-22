@@ -1,6 +1,6 @@
 ## Submission
 
-This submission updates dependency requirements to ensure compatibility with the latest version of randomForestSRC (3.2.2)
+This submission makes minor changes to improve compatability on Windows systems.
 
 ## Test environments
 * Local OS X install, R 4.3.0

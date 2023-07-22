@@ -1,6 +1,6 @@
 #' Generate Conjoint Model Using BART
 #'
-#' @description A wrapper for the [BART::pbart()] function.
+#' @description A wrapper for the [BART::pbart()] function used for estimating heterogeneity in conjoint models
 #' @param data A data.frame, containing all attributes, controls, the outcome and id variables to analyze.
 #' @param Y Character string -- the outcome variable
 #' @param type Type of conjoint experiment -- either "choice" (for forced-choice outcomes) or "rating" (for interval ratings). If NULL (default), the function will attempt to automatically detect the outcome type.
@@ -8,9 +8,9 @@
 #' @param round Character string -- variable identifying rounds of the conjoint experiment
 #' @param use_round Boolean -- whether to include the round indicator column when training the BART model (default = \code{TRUE})
 #' @param cores Integer -- number of CPU cores used in model training
-#' @param ... Other arguments passed to [BART::pbart()]
+#' @param ... Other arguments passed to [BART::mc.pbart()] if on a Unix-based system
 #' @return A trained [BART::pbart()] model that can be passed to [cjbart::IMCE()]
-#' @details Please note, \code{cjbart} currently only works for a binary outcome.
+#' @details Please note, Windows users cannot use the parallelized [BART::mc.pbart()] function, and so setting an internal seed will not be used.
 #' @importFrom BART pbart
 #' @seealso [BART::pbart()]
 #' @export
@@ -88,12 +88,28 @@ cjbart <- function(data, Y, type = NULL, id = NULL, round = NULL, use_round = TR
 
   } else {
 
+    pbart_args <- list(
+      x.train = as.data.frame(train_X),
+      y.train = train_Y,
+      ...
+    )
+
+    if ("seed" %in% names(pbart_args)) {
+      warning("`seed` argument not used on Windows")
+      pbart_args[["seed"]] <- NULL
+      pbart_args[["mc.cores"]] <- NULL
+    }
+
     if (type == "choice") {
-      train_model <- BART::pbart(x.train = as.data.frame(train_X),
-                                 y.train = train_Y, ...)
+      train_model <- do.call(
+        BART::pbart,
+        pbart_args
+      )
     } else {
-      train_model <- BART::wbart(x.train = as.data.frame(train_X),
-                                 y.train = train_Y, ...)
+      train_model <- do.call(
+        BART::wbart,
+        pbart_args
+      )
     }
   }
 
