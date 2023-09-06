@@ -1,6 +1,6 @@
 ## Submission
 
-This submission makes minor changes to improve compatability on Windows systems.
+This submission makes minor changes to improve usage on Windows systems.
 
 ## Test environments
 * Local OS X install, R 4.3.0
