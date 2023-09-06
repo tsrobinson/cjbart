@@ -13,6 +13,9 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.width = 7, fig.height = 5
 )
+
+library(randomForestSRC)
+options(rf.cores = 2)
 ```
 
 ```{r setup}
@@ -23,10 +26,10 @@ library(cjbart)
 
 This vignette provides a brief example of how to estimate heterogeneous effects in conjoint experiments, using \code{cjbart}.
 
-We first simulate a basic conjoint design for the purpose of illustration. Suppose we conducted a conjoint experiment on 250 individuals, where each individual makes 5 discrete choices between two profiles. Each profile has five attributes (A-E), and we also record two covariates for each subject.  The resulting data contains 2500 observations. 
+We first simulate a basic conjoint design for the purpose of illustration. Suppose we conducted a conjoint experiment on 100 individuals, where each individual makes 5 discrete choices between two profiles. Each profile has three attributes (A-E), and we also record two covariates for each subject.  The resulting data contains 1000 observations. 
 
 ```{r data, include=TRUE}
-subjects <- 250
+subjects <- 100
 rounds <- 5
 profiles <- 2
 obs <- subjects*rounds*profiles
@@ -54,12 +57,13 @@ fake_data$Y <- ifelse(fake_data$E == "e2",
 
 ## Train a probit BART model on conjoint data
 
-To estimate a conjoint model on this data we will use the `cjbart()` function, which uses Bayesian Additive Regression Trees (BART) to approximate the relationships between the outcome (a binary choice), the randomized attribute-levels, and the included covariates. The result is a modified `pbart` model, which we will use to estimate heterogeneity in the treatment effects:
+To estimate a conjoint model on this data we will use the `cjbart()` function, which uses Bayesian Additive Regression Trees (BART) to approximate the relationships between the outcome (a binary choice), the randomized attribute-levels, and the included covariates. For the sake of efficiency in this example, we reduce the number of trees (`ntree`) and cuts (`numcut`) used to estimate the BART model. More generally, users can pass arguments to the underlying BART algorithm (see `?BART::pbart`) directly from the `cjbart` function to adjust the model hyperparameters:
 
 ```{r train, include=TRUE}
 cj_model <- cjbart(data = fake_data,
                    Y = "Y", 
-                   id = "id1")
+                   id = "id1",
+                   ntree = 15, numcut = 20)
 
 ```
 

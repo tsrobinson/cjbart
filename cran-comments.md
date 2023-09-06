@@ -1,6 +1,8 @@
 ## Submission
 
-This submission makes minor changes to improve usage on Windows systems.
+This is a re-submission that sets the number of OpenMP cores to prevent long debian runtimes.
+
+The original submission makes minor changes to improve usage on Windows systems.
 
 ## Test environments
 * Local OS X install, R 4.3.0
